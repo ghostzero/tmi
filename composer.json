@@ -1,0 +1,23 @@
+{
+  "name": "ghostzero/tmi",
+  "description": "PHP Twitch Messaging Interface",
+  "type": "library",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "René Preuß",
+      "email": "rene@preuss.io"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "GhostZero\\Tmi\\": "src/"
+    }
+  },
+  "require": {
+    "php": "^7.4",
+    "react/socket": "^1.6",
+    "ext-mbstring": "*"
+  },
+  "minimum-stability": "dev"
+}
