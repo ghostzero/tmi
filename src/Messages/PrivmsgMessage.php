@@ -51,7 +51,7 @@ class PrivmsgMessage extends IrcMessage
         return [new Event('privmsg', [$this->user, $this->tags, $this->target, $this->message, $this->self])];
     }
 
-    public function injectChannel(array $channels): void
+    public function injectChannels(array $channels): void
     {
         if (array_key_exists($this->target, $channels)) {
             $this->channel = $channels[$this->target];
