@@ -19,5 +19,8 @@
     "react/socket": "^1.6",
     "ext-mbstring": "*"
   },
-  "minimum-stability": "dev"
+  "minimum-stability": "dev",
+  "require-dev": {
+    "phpunit/phpunit": "9"
+  }
 }
