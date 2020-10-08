@@ -18,7 +18,7 @@ class ClientOptions
 
     public function getIdentity(): array
     {
-        $default = ['username' => 'justinfan1337', 'password' => null];
+        $default = ['username' => 'justinfan' . random_int(1000, 80000), 'password' => 'SCHMOOPIIE'];
         return $this->options['identity'] ?? $default;
     }
 
