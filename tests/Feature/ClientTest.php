@@ -1,10 +1,10 @@
 <?php
 
-namespace GhostZero\Tmi\Tests;
+namespace Tests\Feature;
 
 use GhostZero\Tmi\Client;
 use GhostZero\Tmi\ClientOptions;
-use PHPUnit\Framework\TestCase;
+use Tests\TestCase;
 
 class ClientTest extends TestCase
 {
