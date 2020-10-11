@@ -34,11 +34,25 @@ class UserNoticeMessage extends IrcMessage
     public function getEvents(): array
     {
         $msgId = $this->tags['msg-id'] ?? '';
+        $arguments = $this->getArguments($msgId);
+        $newChatter = (($msgId === self::TAG_RITUAl) && ($arguments[0] === 'new_chatter'));
 
         return [
-            new Event('usernotice', [$this->channel]),
-            new Event($msgId === 'sub' ? 'subscription' : $msgId, $this->getArguments($msgId)),
+            new Event('usernotice', [$this->channel, $msgId]),
+            new Event($newChatter ? 'newchatter' : $this->getEventName($msgId), $arguments),
         ];
+    }
+
+    public function getEventName($msgId): string
+    {
+        switch ($msgId) {
+            case self::TAG_SUB:
+                return 'subscription';
+            case self::TAG_RAID:
+                return 'raided';
+            default:
+                return $msgId;
+        }
     }
 
     public function getArguments(string $msgId): array
@@ -47,15 +61,15 @@ class UserNoticeMessage extends IrcMessage
         $username = $tags['display-name'] ?? $tags['login'] ?? '';
         $plan = $tags['msg-param-sub-plan'] ?? '';
         $planName = $tags['msg-param-sub-plan-name'] ?? '';
-        $prime = (bool)strpos($plan, 'Prime');
+        $prime = strpos($plan, 'Prime') !== false;
         $methods = ['prime' => $prime, 'plan' => $plan, 'planName' => $planName];
         $userState = $tags;
-        $streakMonths = $tags['msg-param-streak-months'] ?? 0;
+        $streakMonths = (int)($tags['msg-param-streak-months'] ?? 0);
         $recipient = $tags['msg-param-recipient-display-name'] ?? $tags['msg-param-recipient-user-name'] ?? '';
-        $giftSubCount = $tags['msg-param-mass-gift-count'] ?? 0;
+        $giftSubCount = (int)($tags['msg-param-mass-gift-count'] ?? 0);
         $sender = $tags['msg-param-sender-name'] ?? $tags['msg-param-sender-login'] ?? '';
         $raidedChannel = $tags['msg-param-displayName'] ?? $tags['msg-param-login'] ?? '';
-        $viewers = $tags['msg-param-viewerCount'] ?? 0;
+        $viewers = (int)($tags['msg-param-viewerCount'] ?? 0);
         $ritual = $tags['msg-param-ritual-name'] ?? '';
         $message = $this->payload ?? '';
 
