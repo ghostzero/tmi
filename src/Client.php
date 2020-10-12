@@ -8,6 +8,7 @@ use GhostZero\Tmi\Messages\IrcMessage;
 use GhostZero\Tmi\Messages\IrcMessageParser;
 use React\Dns\Resolver\Factory;
 use React\EventLoop\LoopInterface;
+use React\EventLoop\TimerInterface;
 use React\Promise\Promise;
 use React\Socket\ConnectionInterface;
 use React\Socket\DnsConnector;
@@ -33,12 +34,17 @@ class Client
 
     protected EventHandler $eventHandler;
 
+    protected CommandQueue $commandQueue;
+
+    protected TimerInterface $timer;
+
     public function __construct(ClientOptions $options)
     {
         $this->options = $options;
         $this->loop = \React\EventLoop\Factory::create();
         $this->ircMessageParser = new IrcMessageParser();
         $this->eventHandler = new EventHandler();
+        $this->commandQueue = new CommandQueue($options->getType());
     }
 
     public function connect(): void
@@ -52,6 +58,10 @@ class Client
         $connectorPromise->then(function (ConnectionInterface $connection) {
             $this->connection = $connection;
             $this->connected = true;
+            $this->timer = $this->loop->addPeriodicTimer(
+                $this->commandQueue->getInterval(),
+                fn() => $this->commandQueue->call($connection)
+            );
 
             // login & request all twitch Kappabilities
             $identity = $this->options->getIdentity();
@@ -73,11 +83,16 @@ class Client
 
             $this->connection->on('close', function () {
                 $this->connected = false;
+                $this->loop->cancelTimer($this->timer);
+                $this->reconnect('Connection closed by Twitch.');
             });
+
             $this->connection->on('end', function () {
                 $this->connected = false;
+                $this->loop->cancelTimer($this->timer);
+                $this->reconnect('Connection ended by Twitch.');
             });
-        });
+        }, fn($error) => $this->reconnect($error));
 
         $this->loop->run();
     }
@@ -90,7 +105,7 @@ class Client
         }
     }
 
-    public function write(string $rawCommand): void
+    public function write(string $rawCommand, string $queue = CommandQueue::QUEUE_DEFAULT): void
     {
         if (!$this->isConnected()) {
             throw new RuntimeException('No open connection was found to write commands to.');
@@ -101,7 +116,7 @@ class Client
             $rawCommand .= "\n";
         }
 
-        $this->connection->write($rawCommand);
+        $this->commandQueue->push($rawCommand, $queue);
     }
 
     private function isConnected(): bool
@@ -150,4 +165,20 @@ class Client
         return $dnsConnector->connect('irc.chat.twitch.tv:6667');
     }
 
+    public function getCommandQueue(): CommandQueue
+    {
+        return $this->commandQueue;
+    }
+
+    private function reconnect($error): void
+    {
+        if ($this->options->shouldReconnect()) {
+            if ($this->options->isDebug()) {
+                print 'Initialize reconnect... Error: ' . $error . PHP_EOL;
+            }
+            $this->loop->addTimer(4.0, function () {
+                $this->connect();
+            });
+        }
+    }
 }

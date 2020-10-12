@@ -51,4 +51,9 @@ class ClientOptions
     {
         return $this->options['connection']['nameserver'] ?? '1.1.1.1';
     }
+
+    public function getType(): string
+    {
+        return $this->options['identity']['type'] ?? 'verified';
+    }
 }

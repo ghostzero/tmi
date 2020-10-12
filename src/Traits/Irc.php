@@ -4,6 +4,7 @@ namespace GhostZero\Tmi\Traits;
 
 use GhostZero\Tmi\Channel;
 use GhostZero\Tmi\Client;
+use GhostZero\Tmi\CommandQueue;
 
 /**
  * @mixin Client
@@ -20,7 +21,7 @@ trait Irc
     {
         $channel = $this->channelName($channel);
         $this->channels[$channel] = new Channel($channel);
-        $this->write("JOIN {$channel}");
+        $this->write("JOIN {$channel}", CommandQueue::QUEUE_JOIN);
     }
 
     public function part(string $channel): void
