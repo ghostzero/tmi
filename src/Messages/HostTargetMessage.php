@@ -14,13 +14,13 @@ class HostTargetMessage extends IrcMessage
     {
         parent::__construct($message);
 
-        $this->channel = strstr($this->commandSuffix, '#');
+        $this->channel = substr(strstr($this->commandSuffix, '#'), 1);
         $this->message = $message;
     }
 
     public function getEvents(): array
     {
-        $msgSplit = explode(' ', $this->message);
+        $msgSplit = explode(' ', $this->payload);
         $viewers = (int)($msgSplit[1] ?? 0);
 
         if ($msgSplit[0] === '-') {

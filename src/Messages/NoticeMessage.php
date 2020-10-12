@@ -2,7 +2,6 @@
 
 namespace GhostZero\Tmi\Messages;
 
-use DomainException;
 use GhostZero\Tmi\Events\Event;
 
 class NoticeMessage extends IrcMessage
@@ -26,21 +25,25 @@ class NoticeMessage extends IrcMessage
     {
         parent::__construct($message);
 
-        $this->channel = strstr($this->commandSuffix, '#');
+        $this->channel = substr(strstr($this->commandSuffix, '#'), 1);
         $this->message = $message;
     }
 
     public function getEvents(): array
     {
         $msgId = $this->tags['msg-id'] ?? '';
-
-        return [
+        $events = [
             new Event('notice', [$this->channel, $msgId]),
-            $this->getSpecificEvent($msgId),
         ];
+
+        if(($event = $this->getSpecificEvent($msgId))) {
+            $events[] = $event;
+        }
+
+        return $events;
     }
 
-    public function getSpecificEvent(string $msgId): Event
+    public function getSpecificEvent(string $msgId): ?Event
     {
         switch ($msgId) {
             case self::TAG_EMOTEONLY_OFF:
@@ -70,7 +73,7 @@ class NoticeMessage extends IrcMessage
 
                 return new Event('vips', [$this->channel, $vips]);
             default:
-                throw new DomainException('Unhandled NOTICE: ' . $msgId);
+                return null;
         }
     }
 }

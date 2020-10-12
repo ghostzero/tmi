@@ -2,7 +2,6 @@
 
 namespace GhostZero\Tmi\Messages;
 
-use DomainException;
 use GhostZero\Tmi\Events\Event;
 
 class UserNoticeMessage extends IrcMessage
@@ -27,7 +26,7 @@ class UserNoticeMessage extends IrcMessage
     {
         parent::__construct($message);
 
-        $this->channel = strstr($this->commandSuffix, '#');
+        $this->channel = substr(strstr($this->commandSuffix, '#'), 1);
         $this->message = $message;
     }
 
@@ -37,10 +36,15 @@ class UserNoticeMessage extends IrcMessage
         $arguments = $this->getArguments($msgId);
         $newChatter = (($msgId === self::TAG_RITUAl) && ($arguments[0] === 'new_chatter'));
 
-        return [
+        $events = [
             new Event('usernotice', [$this->channel, $msgId]),
-            new Event($newChatter ? 'newchatter' : $this->getEventName($msgId), $arguments),
         ];
+
+        if(!empty(($event = (new Event($newChatter ? 'newchatter' : $this->getEventName($msgId), $arguments)))->getArguments())) {
+            $events[] = $event;
+        }
+
+        return $events;
     }
 
     public function getEventName($msgId): string
@@ -97,7 +101,7 @@ class UserNoticeMessage extends IrcMessage
             case self::TAG_SUBMYSTERYGIFT:
                 return [$this->channel, $username, $giftSubCount, $methods, $userState];
             default:
-                throw new DomainException('Unhandled USERNOTICE: ' . $msgId);
+                return [];
         }
     }
 }

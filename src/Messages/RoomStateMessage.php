@@ -12,15 +12,20 @@ class RoomStateMessage extends IrcMessage
     {
         parent::__construct($message);
 
-        $this->channel = strstr($this->commandSuffix, '#');
+        $this->channel = substr(strstr($this->commandSuffix, '#'), 1);
     }
 
     public function getEvents(): array
     {
-        return [
+        $events = [
             new Event('roomstate', [$this->channel, $this->tags]),
-            $this->getSpecificEvent(),
         ];
+
+        if(($event = $this->getSpecificEvent())) {
+            $events[] = $event;
+        }
+
+        return $events;
     }
 
     public function getSpecificEvent(): ?Event
