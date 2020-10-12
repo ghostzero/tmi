@@ -13,7 +13,7 @@ class UserNoticeMessage extends IrcMessage
     public const TAG_PRIMEPAIDUPGRADE = 'primepaidupgrade';
     public const TAG_RAID = 'raid';
     public const TAG_RESUB = 'resub';
-    public const TAG_RITUAl = 'ritual';
+    public const TAG_RITUAL = 'ritual';
     public const TAG_SUB = 'sub';
     public const TAG_SUBGIFT = 'subgift';
     public const TAG_SUBMYSTERYGIFT = 'submysterygift';
@@ -34,13 +34,15 @@ class UserNoticeMessage extends IrcMessage
     {
         $msgId = $this->tags['msg-id'] ?? '';
         $arguments = $this->getArguments($msgId);
-        $newChatter = (($msgId === self::TAG_RITUAl) && ($arguments[0] === 'new_chatter'));
+        $newChatter = (($msgId === self::TAG_RITUAL) && ($arguments[0] === 'new_chatter'));
 
         $events = [
             new Event('usernotice', [$this->channel, $msgId]),
         ];
 
-        if(!empty(($event = (new Event($newChatter ? 'newchatter' : $this->getEventName($msgId), $arguments)))->getArguments())) {
+        $event = new Event($newChatter ? 'newchatter' : $this->getEventName($msgId), $arguments);
+
+        if(!empty($event->getArguments())) {
             $events[] = $event;
         }
 
@@ -92,7 +94,7 @@ class UserNoticeMessage extends IrcMessage
                 return [$this->channel, $raidedChannel, $viewers];
             case self::TAG_RESUB:
                 return [$this->channel, $username, $streakMonths, $message, $userState, $methods];
-            case self::TAG_RITUAl:
+            case self::TAG_RITUAL:
                 return [$this->channel, $ritual, $username];
             case self::TAG_SUB:
                 return [$this->channel, $username, $methods, $message, $userState];

@@ -46,7 +46,7 @@ class PrivmsgMessage extends IrcMessage
             if ((bool)strpos($this->message, 'hosting you')) {
                 return [new Event('hosted', [$this->channel, $this->user, 0, $autohost])];
             }
-        } else if ($this->target[0] === '#') {
+        } elseif ($this->target[0] === '#') {
             $events = [
                 new Event('message', [$this->channel, $this->tags, $this->user, $this->message, $this->self])
             ];
