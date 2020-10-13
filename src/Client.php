@@ -119,7 +119,7 @@ class Client
         $this->commandQueue->push($rawCommand, $queue);
     }
 
-    private function isConnected(): bool
+    public function isConnected(): bool
     {
         return isset($this->connection) && $this->connected;
     }
