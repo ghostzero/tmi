@@ -56,6 +56,18 @@ class IrcMessageParser
             case IrcCommand::RPL_MOTD:
                 $msg = new MotdMessage($message);
                 break;
+            case 'USERNOTICE':
+                $msg = new UserNoticeMessage($message);
+                break;
+            case 'NOTICE':
+                $msg = new NoticeMessage($message);
+                break;
+            case 'ROOMSTATE':
+                $msg = new RoomStateMessage($message);
+                break;
+            case 'HOSTTARGET':
+                $msg = new HostTargetMessage($message);
+                break;
 
             default:
                 $msg = new IrcMessage($message);

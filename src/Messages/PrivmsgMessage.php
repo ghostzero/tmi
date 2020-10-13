@@ -36,12 +36,22 @@ class PrivmsgMessage extends IrcMessage
 
     public function getEvents(): array
     {
-        if ($this->target[0] === '#') {
+        if ($this->user === 'jtv') {
+            $autohost = (bool)strpos($this->message, 'auto');
+            if ((bool)strpos($this->message, 'hosting you for')) {
+                $count = (int)explode(' ', substr($this->message, strpos($this->message, 'hosting you for')))[3];
+                return [new Event('hosted', [$this->channel, $this->user, $count, $autohost])];
+            }
+
+            if ((bool)strpos($this->message, 'hosting you')) {
+                return [new Event('hosted', [$this->channel, $this->user, 0, $autohost])];
+            }
+        } elseif ($this->target[0] === '#') {
             $events = [
                 new Event('message', [$this->channel, $this->tags, $this->user, $this->message, $this->self])
             ];
 
-            if($this->tags['bits']) {
+            if ($this->tags['bits']) {
                 $events[] = new Event('cheer', [$this->channel, $this->tags, $this->user, $this->message, $this->self]);
             }
 
@@ -51,7 +61,7 @@ class PrivmsgMessage extends IrcMessage
         return [new Event('privmsg', [$this->user, $this->tags, $this->target, $this->message, $this->self])];
     }
 
-    public function injectChannel(array $channels): void
+    public function injectChannels(array $channels): void
     {
         if (array_key_exists($this->target, $channels)) {
             $this->channel = $channels[$this->target];

@@ -41,7 +41,7 @@ class KickMessage extends IrcMessage
         ];
     }
 
-    public function injectChannel(array $channels): void
+    public function injectChannels(array $channels): void
     {
         if (array_key_exists($this->target, $channels)) {
             $this->channel = $channels[$this->target]->getName();

@@ -130,7 +130,7 @@ class Client
             print $message->rawMessage . PHP_EOL;
         }
 
-        $message->injectChannel($this->channels);
+        $message->injectChannels($this->channels);
         $message->handle($this);
 
         foreach ($message->getEvents() as $event) {

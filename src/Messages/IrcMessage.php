@@ -39,7 +39,7 @@ class IrcMessage
         return [];
     }
 
-    public function injectChannel(array $channels): void
+    public function injectChannels(array $channels): void
     {
         //
     }
