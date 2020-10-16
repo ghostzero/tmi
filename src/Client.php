@@ -159,10 +159,10 @@ class Client
     {
         if ($this->options->shouldConnectSecure()) {
             return (new SecureConnector($dnsConnector, $this->loop))
-                ->connect('irc.chat.twitch.tv:6697');
+                ->connect(sprintf('%s:6697', $this->options->getServer()));
         }
 
-        return $dnsConnector->connect('irc.chat.twitch.tv:6667');
+        return $dnsConnector->connect(sprintf('%s:6667', $this->options->getServer()));
     }
 
     public function getCommandQueue(): CommandQueue
