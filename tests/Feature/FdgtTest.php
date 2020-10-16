@@ -16,7 +16,7 @@ class FdgtTest extends TestCase
         $client = new Client(new ClientOptions([
             'options' => ['debug' => true],
             'connection' => [
-                'secure' => false,
+                'secure' => true,
                 'server' => 'irc.fdgt.dev',
             ],
             'channels' => ['ghostzero']
