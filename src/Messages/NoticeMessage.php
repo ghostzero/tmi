@@ -2,6 +2,7 @@
 
 namespace GhostZero\Tmi\Messages;
 
+use GhostZero\Tmi\Client;
 use GhostZero\Tmi\Events\Event;
 
 class NoticeMessage extends IrcMessage
@@ -29,7 +30,7 @@ class NoticeMessage extends IrcMessage
         $this->message = $message;
     }
 
-    public function getEvents(): array
+    public function handle(Client $client, array $channels): array
     {
         $msgId = $this->tags['msg-id'] ?? '';
         $events = [

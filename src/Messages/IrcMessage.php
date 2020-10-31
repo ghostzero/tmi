@@ -13,9 +13,7 @@ class IrcMessage
 
     protected string $commandSuffix;
 
-    protected bool $handled;
-
-    protected string $payload;
+    protected string $payload = '';
 
     protected string $source;
 
@@ -23,25 +21,19 @@ class IrcMessage
 
     public function __construct(string $command)
     {
-        $this->handled = false;
         $this->parse($command);
     }
 
-    public function handle(Client $client, bool $force = false): void
-    {
-        if ($this->handled && !$force) {
-            return;
-        }
-    }
-
-    public function getEvents(): array
+    /**
+     * Handles the message and returns a array of events to invoke.
+     *
+     * @param Client $client
+     * @param array $channels
+     * @return array
+     */
+    public function handle(Client $client, array $channels): array
     {
         return [];
-    }
-
-    public function injectChannels(array $channels): void
-    {
-        //
     }
 
     private function parse(string $command): void

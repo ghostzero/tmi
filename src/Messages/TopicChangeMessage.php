@@ -1,8 +1,6 @@
 <?php
 
-
 namespace GhostZero\Tmi\Messages;
-
 
 use GhostZero\Tmi\Client;
 use GhostZero\Tmi\Events\Event;
@@ -21,19 +19,13 @@ class TopicChangeMessage extends IrcMessage
         $this->topic = $this->payload;
     }
 
-    public function handle(Client $client, bool $force = false): void
+    public function handle(Client $client, array $channels): array
     {
-        if ($this->handled && !$force) {
-            return;
-        }
-
         $client->getChannel($this->channel)->setTopic($this->topic);
-    }
 
-    public function getEvents(): array
-    {
         return [
             new Event('topic', [$this->channel, $this->topic]),
         ];
     }
+
 }

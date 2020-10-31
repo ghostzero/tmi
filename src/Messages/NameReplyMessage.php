@@ -19,19 +19,12 @@ class NameReplyMessage extends IrcMessage
         $this->names = explode(' ', $this->payload ?? '');
     }
 
-    public function handle(Client $client, bool $force = false): void
+    public function handle(Client $client, array $channels): array
     {
-        if ($this->handled && !$force) {
-            return;
-        }
-
         if (!empty($this->names)) {
             $client->getChannel($this->channel)->setUsers($this->names);
         }
-    }
 
-    public function getEvents(): array
-    {
         return [
             new Event('names', [$this->channel, $this->names]),
         ];

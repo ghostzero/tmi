@@ -2,6 +2,7 @@
 
 namespace GhostZero\Tmi\Messages;
 
+use GhostZero\Tmi\Client;
 use GhostZero\Tmi\Events\Event;
 
 class HostTargetMessage extends IrcMessage
@@ -18,7 +19,7 @@ class HostTargetMessage extends IrcMessage
         $this->message = $message;
     }
 
-    public function getEvents(): array
+    public function handle(Client $client, array $channels): array
     {
         $msgSplit = explode(' ', $this->payload);
         $viewers = (int)($msgSplit[1] ?? 0);

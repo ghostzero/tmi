@@ -2,6 +2,7 @@
 
 namespace GhostZero\Tmi\Messages;
 
+use GhostZero\Tmi\Client;
 use GhostZero\Tmi\Events\Event;
 
 class RoomStateMessage extends IrcMessage
@@ -15,13 +16,13 @@ class RoomStateMessage extends IrcMessage
         $this->channel = substr(strstr($this->commandSuffix, '#'), 1);
     }
 
-    public function getEvents(): array
+    public function handle(Client $client, array $channels): array
     {
         $events = [
             new Event('roomstate', [$this->channel, $this->tags]),
         ];
 
-        if(($event = $this->getSpecificEvent())) {
+        if (($event = $this->getSpecificEvent())) {
             $events[] = $event;
         }
 

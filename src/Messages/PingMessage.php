@@ -7,17 +7,10 @@ use GhostZero\Tmi\Events\Event;
 
 class PingMessage extends IrcMessage
 {
-    public function handle(Client $client, bool $force = false): void
+    public function handle(Client $client, array $channels): array
     {
-        if ($this->handled && !$force) {
-            return;
-        }
-
         $client->write("PONG :$this->payload");
-    }
 
-    public function getEvents(): array
-    {
         return [
             new Event('ping'),
         ];
