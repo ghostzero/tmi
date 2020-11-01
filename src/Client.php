@@ -52,18 +52,13 @@ class Client
         $connectorPromise->then(function (ConnectionInterface $connection) {
             $this->connection = $connection;
             $this->connected = true;
+            $this->channels = [];
 
             // login & request all twitch Kappabilities
             $identity = $this->options->getIdentity();
             $this->write("PASS {$identity['password']}");
             $this->write("NICK {$identity['username']}");
             $this->write('CAP REQ :twitch.tv/membership twitch.tv/tags twitch.tv/commands');
-
-            $channels = $this->options->getChannels();
-
-            foreach ($channels as $channel) {
-                $this->join($channel);
-            }
 
             $this->connection->on('data', function ($data) {
                 foreach ($this->ircMessageParser->parse($data) as $message) {
@@ -73,11 +68,13 @@ class Client
 
             $this->connection->on('close', function () {
                 $this->connected = false;
+                $this->reconnect('Connection closed by Twitch.');
             });
+
             $this->connection->on('end', function () {
-                $this->connected = false;
+                $this->connection->close();
             });
-        });
+        }, fn($error) => $this->reconnect($error));
 
         $this->loop->run();
     }
@@ -104,21 +101,18 @@ class Client
         $this->connection->write($rawCommand);
     }
 
-    private function isConnected(): bool
+    public function isConnected(): bool
     {
         return isset($this->connection) && $this->connected;
     }
 
     private function handleIrcMessage(IrcMessage $message): void
     {
-        if ($this->options->isDebug()) {
-            print $message->rawMessage . PHP_EOL;
-        }
+        $this->debug($message->rawMessage);
 
-        $message->injectChannel($this->channels);
-        $message->handle($this);
+        $events = $message->handle($this, $this->channels);
 
-        foreach ($message->getEvents() as $event) {
+        foreach ($events as $event) {
             $this->eventHandler->invoke($event);
         }
     }
@@ -133,6 +127,11 @@ class Client
         return $this->options;
     }
 
+    public function any(Closure $closure): self
+    {
+        return $this->on('*', $closure);
+    }
+
     public function on(string $event, Closure $closure): self
     {
         $this->eventHandler->addHandler($event, $closure);
@@ -144,10 +143,24 @@ class Client
     {
         if ($this->options->shouldConnectSecure()) {
             return (new SecureConnector($dnsConnector, $this->loop))
-                ->connect('irc.chat.twitch.tv:6697');
+                ->connect(sprintf('%s:6697', $this->options->getServer()));
         }
 
-        return $dnsConnector->connect('irc.chat.twitch.tv:6667');
+        return $dnsConnector->connect(sprintf('%s:6667', $this->options->getServer()));
     }
 
+    private function reconnect($error): void
+    {
+        if ($this->options->shouldReconnect()) {
+            $this->debug('Initialize reconnect... Error: ' . $error);
+            $this->connect();
+        }
+    }
+
+    private function debug(string $message): void
+    {
+        if ($this->options->isDebug()) {
+            print $message . PHP_EOL;
+        }
+    }
 }

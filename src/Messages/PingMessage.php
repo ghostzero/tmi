@@ -3,23 +3,16 @@
 namespace GhostZero\Tmi\Messages;
 
 use GhostZero\Tmi\Client;
-use GhostZero\Tmi\Events\Event;
+use GhostZero\Tmi\Events\Irc\PingEvent;
 
 class PingMessage extends IrcMessage
 {
-    public function handle(Client $client, bool $force = false): void
+    public function handle(Client $client, array $channels): array
     {
-        if ($this->handled && !$force) {
-            return;
-        }
-
         $client->write("PONG :$this->payload");
-    }
 
-    public function getEvents(): array
-    {
         return [
-            new Event('ping'),
+            new PingEvent(),
         ];
     }
 }

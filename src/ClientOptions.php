@@ -32,6 +32,11 @@ class ClientOptions
         return $this->options['identity']['username'] ?? 'justinfan1337';
     }
 
+    public function getServer(): string
+    {
+        return $this->options['connection']['server'] ?? 'irc.chat.twitch.tv';
+    }
+
     public function shouldAutoRejoin(): bool
     {
         return $this->options['connection']['rejoin'] ?? true;
@@ -50,5 +55,10 @@ class ClientOptions
     public function getNameserver(): string
     {
         return $this->options['connection']['nameserver'] ?? '1.1.1.1';
+    }
+
+    public function getType(): string
+    {
+        return $this->options['identity']['type'] ?? 'verified';
     }
 }

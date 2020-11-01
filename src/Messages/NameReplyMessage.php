@@ -3,7 +3,7 @@
 namespace GhostZero\Tmi\Messages;
 
 use GhostZero\Tmi\Client;
-use GhostZero\Tmi\Events\Event;
+use GhostZero\Tmi\Events\Irc\NameReplyEvent;
 
 class NameReplyMessage extends IrcMessage
 {
@@ -16,24 +16,18 @@ class NameReplyMessage extends IrcMessage
         parent::__construct($message);
 
         $this->channel = strstr($this->commandSuffix, '#');
-        $this->names = explode(' ', $this->payload);
+        $this->names = explode(' ', $this->payload ?? '');
     }
 
-    public function handle(Client $client, bool $force = false): void
+    public function handle(Client $client, array $channels): array
     {
-        if ($this->handled && !$force) {
-            return;
-        }
-
+        $channel = $client->getChannel($this->channel);
         if (!empty($this->names)) {
-            $client->getChannel($this->channel)->setUsers($this->names);
+            $channel->setUsers($this->names);
         }
-    }
 
-    public function getEvents(): array
-    {
         return [
-            new Event('names', [$this->channel, $this->names]),
+            new NameReplyEvent($channel, $this->names),
         ];
     }
 }

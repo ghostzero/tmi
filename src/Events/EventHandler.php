@@ -11,13 +11,8 @@ class EventHandler
         $this->eventHandlers = [];
     }
 
-    public function addHandler($event, ?callable $function): void
+    public function addHandler(string $event, callable $function): void
     {
-        if (is_callable($event)) {
-            $function = $event;
-            $event = '*';
-        }
-
         if (!array_key_exists($event, $this->eventHandlers)) {
             $this->eventHandlers[$event] = [];
         }
@@ -27,9 +22,16 @@ class EventHandler
 
     public function invoke(Event $event): void
     {
-        $handlers = array_merge($this->eventHandlers['*'] ?? [], $this->eventHandlers[$event->getEvent()] ?? []);
+        $handlers = $this->eventHandlers['*'] ?? [];
+        $this->invokeHandlers($handlers, $event);
+        $handlers = $this->eventHandlers[get_class($event)] ?? [];
+        $this->invokeHandlers($handlers, $event);
+    }
+
+    protected function invokeHandlers(array $handlers, Event $event): void
+    {
         foreach ($handlers as $handler) {
-            $handler(...$event->getArguments());
+            $handler($event);
         }
     }
 }

@@ -3,25 +3,18 @@
 namespace GhostZero\Tmi\Messages;
 
 use GhostZero\Tmi\Client;
-use GhostZero\Tmi\Events\Event;
+use GhostZero\Tmi\Events\Irc\WelcomeEvent;
 
 class WelcomeMessage extends IrcMessage
 {
-    public function handle(Client $client, bool $force = false): void
+    public function handle(Client $client, array $clients): array
     {
-        if ($this->handled && !$force) {
-            return;
+        foreach ($client->getOptions()->getChannels() as $channel) {
+            $client->join($channel);
         }
 
-        foreach ($client->getChannels() as $channel) {
-            $client->join($channel->getName());
-        }
-    }
-
-    public function getEvents(): array
-    {
         return [
-            new Event('registered'),
+            new WelcomeEvent(),
         ];
     }
 }
