@@ -15,7 +15,6 @@ class PrivmsgMessage extends IrcMessage
     public string $target;
 
     public string $user;
-    private bool $self = false;
 
     public function __construct(string $message)
     {
@@ -28,10 +27,22 @@ class PrivmsgMessage extends IrcMessage
     public function handle(Client $client, array $channels): array
     {
         if (array_key_exists($this->target, $channels)) {
-            $this->channel = $channels[$this->target]->getName();
+            $this->channel = $channels[$this->target];
         }
 
-        $this->self = $client->getOptions()->getNickname() === $this->user;
+        $self = $client->getOptions()->getNickname() === $this->user;
+
+        if ($this->user === 'tmi_inspector') {
+            $payload = json_decode($this->message, false, 512, JSON_THROW_ON_ERROR);
+            $events = [
+                new Event('inspector_payload', [$payload]),
+            ];
+            if ($payload->event === 'ready') {
+                $events[] = new Event('inspector', [$payload->url]);
+            }
+
+            return $events;
+        }
 
         if ($this->user === 'jtv') {
             $autohost = (bool)strpos($this->message, 'auto');
@@ -45,20 +56,16 @@ class PrivmsgMessage extends IrcMessage
             }
         } elseif ($this->target[0] === '#') {
             $events = [
-                new Event('message', [$this->channel, $this->tags, $this->user, $this->message, $this->self])
+                new Event('message', [$this->channel, $this->tags, $this->user, $this->message, $self])
             ];
 
-            if ($this->user === 'tmi_dev') {
-                $events[] = new Event('inspector', [json_decode($this->message, false, 512, JSON_THROW_ON_ERROR)]);
-            }
-
             if ($this->tags['bits']) {
-                $events[] = new Event('cheer', [$this->channel, $this->tags, $this->user, $this->message, $this->self]);
+                $events[] = new Event('cheer', [$this->channel, $this->tags, $this->user, $this->message, $self]);
             }
 
             return $events;
         }
 
-        return [new Event('privmsg', [$this->user, $this->tags, $this->target, $this->message, $this->self])];
+        return [new Event('privmsg', [$this->user, $this->tags, $this->target, $this->message, $self])];
     }
 }

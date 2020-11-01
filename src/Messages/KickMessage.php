@@ -2,12 +2,13 @@
 
 namespace GhostZero\Tmi\Messages;
 
+use GhostZero\Tmi\Channel;
 use GhostZero\Tmi\Client;
 use GhostZero\Tmi\Events\Event;
 
 class KickMessage extends IrcMessage
 {
-    public string $channel;
+    public Channel $channel;
 
     public string $message;
 
@@ -26,7 +27,7 @@ class KickMessage extends IrcMessage
     public function handle(Client $client, array $channels): array
     {
         if (array_key_exists($this->target, $channels)) {
-            $this->channel = $channels[$this->target]->getName();
+            $this->channel = $channels[$this->target];
         }
 
         if ($client->getOptions()->getNickname() === $this->user && $client->getOptions()->shouldAutoRejoin()) {
