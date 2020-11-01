@@ -2,8 +2,11 @@
 
 namespace GhostZero\Tmi\Messages;
 
+use GhostZero\Tmi\Channel;
 use GhostZero\Tmi\Client;
 use GhostZero\Tmi\Events\Event;
+use GhostZero\Tmi\Events\Twitch;
+use GhostZero\Tmi\Plan;
 
 class UserNoticeMessage extends IrcMessage
 {
@@ -19,58 +22,43 @@ class UserNoticeMessage extends IrcMessage
     public const TAG_SUBGIFT = 'subgift';
     public const TAG_SUBMYSTERYGIFT = 'submysterygift';
 
-    public string $channel;
+    public Channel $channel;
 
     public string $message;
 
     public function __construct(string $message)
     {
         parent::__construct($message);
-
-        $this->channel = substr(strstr($this->commandSuffix, '#'), 1);
         $this->message = $message;
     }
 
     public function handle(Client $client, array $channels): array
     {
+        if (array_key_exists($this->commandSuffix, $channels)) {
+            $this->channel = $channels[$this->commandSuffix];
+        }
+
         $msgId = $this->tags['msg-id'] ?? '';
-        $arguments = $this->getArguments($msgId);
-        $newChatter = (($msgId === self::TAG_RITUAL) && ($arguments[0] === 'new_chatter'));
 
         $events = [
-            new Event('usernotice', [$this->channel, $msgId]),
+            new Twitch\UserNoticeEvent($this->channel, $msgId)
         ];
 
-        $event = new Event($newChatter ? 'newchatter' : $this->getEventName($msgId), $arguments);
-
-        if(!empty($event->getArguments())) {
+        if ($event = $this->getArguments($msgId)) {
             $events[] = $event;
         }
 
         return $events;
     }
 
-    public function getEventName($msgId): string
-    {
-        switch ($msgId) {
-            case self::TAG_SUB:
-                return 'subscription';
-            case self::TAG_RAID:
-                return 'raided';
-            default:
-                return $msgId;
-        }
-    }
-
-    public function getArguments(string $msgId): array
+    public function getArguments(string $msgId): ?Event
     {
         $tags = $this->tags;
         $username = $tags['display-name'] ?? $tags['login'] ?? '';
-        $plan = $tags['msg-param-sub-plan'] ?? '';
+        $subPlan = $tags['msg-param-sub-plan'] ?? '';
         $planName = $tags['msg-param-sub-plan-name'] ?? '';
-        $prime = strpos($plan, 'Prime') !== false;
-        $methods = ['prime' => $prime, 'plan' => $plan, 'planName' => $planName];
-        $userState = $tags;
+        $prime = strpos($subPlan, 'Prime') !== false;
+        $plan = new Plan($prime, $subPlan, $planName);
         $streakMonths = (int)($tags['msg-param-streak-months'] ?? 0);
         $recipient = $tags['msg-param-recipient-display-name'] ?? $tags['msg-param-recipient-user-name'] ?? '';
         $giftSubCount = (int)($tags['msg-param-mass-gift-count'] ?? 0);
@@ -82,29 +70,29 @@ class UserNoticeMessage extends IrcMessage
 
         switch ($msgId) {
             case self::TAG_ANONGIFTPAIDUPGRADE:
-                return [$this->channel, $username, $userState];
+                return new Twitch\AnonGiftPaidUpgradeEvent($this->channel, $username, $tags);
             case self::TAG_ANONSUBGIFT:
-                return [$this->channel, $streakMonths, $recipient, $methods, $userState];
+                return new Twitch\AnonSubGiftEvent($this->channel, $streakMonths, $recipient, $plan, $tags);
             case self::TAG_ANONSUBMYSTERYGIFT:
-                return [$this->channel, $giftSubCount, $methods, $userState];
+                return new Twitch\AnonSubMysteryGiftEvent($this->channel, $giftSubCount, $plan, $tags);
             case self::TAG_GIFTPAIDUPGRADE:
-                return [$this->channel, $username, $sender, $userState];
+                return new Twitch\GiftPaidUpgradeEvent($this->channel, $username, $sender, $tags);
             case self::TAG_PRIMEPAIDUPGRADE:
-                return [$this->channel, $username, $methods, $userState];
+                return new Twitch\PrimePaidUpgradeEvent($this->channel, $username, $plan, $tags);
             case self::TAG_RAID:
-                return [$this->channel, $raidedChannel, $viewers];
+                return new Twitch\RaidEvent($this->channel, $raidedChannel, $viewers);
             case self::TAG_RESUB:
-                return [$this->channel, $username, $streakMonths, $message, $userState, $methods];
+                return new Twitch\ResubEvent($this->channel, $username, $streakMonths, $message, $tags, $plan);
             case self::TAG_RITUAL:
-                return [$this->channel, $ritual, $username];
+                return new Twitch\RitualEvent($this->channel, $ritual, $username, $tags, $message);
             case self::TAG_SUB:
-                return [$this->channel, $username, $methods, $message, $userState];
+                return new Twitch\SubEvent($this->channel, $username, $plan, $message, $tags);
             case self::TAG_SUBGIFT:
-                return [$this->channel, $username, $streakMonths, $recipient, $methods, $userState];
+                return new Twitch\SubGiftEvent($this->channel, $username, $streakMonths, $recipient, $plan, $tags);
             case self::TAG_SUBMYSTERYGIFT:
-                return [$this->channel, $username, $giftSubCount, $methods, $userState];
+                return new Twitch\SubMysteryGiftEvent($this->channel, $username, $giftSubCount, $plan, $tags);
             default:
-                return [];
+                return null;
         }
     }
 }

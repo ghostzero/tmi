@@ -2,8 +2,15 @@
 
 namespace GhostZero\Tmi\Messages;
 
+use GhostZero\Tmi\Channel;
 use GhostZero\Tmi\Client;
 use GhostZero\Tmi\Events\Event;
+use GhostZero\Tmi\Events\Twitch\EmoteOnlyModeEvent;
+use GhostZero\Tmi\Events\Twitch\ModsEvent;
+use GhostZero\Tmi\Events\Twitch\NoticeEvent;
+use GhostZero\Tmi\Events\Twitch\R9kModeEvent;
+use GhostZero\Tmi\Events\Twitch\SubsOnlyModeEvent;
+use GhostZero\Tmi\Events\Twitch\VipsEvent;
 
 class NoticeMessage extends IrcMessage
 {
@@ -18,26 +25,28 @@ class NoticeMessage extends IrcMessage
     public const TAG_SUBMODE_ON = 'subs_on';
     public const TAG_VIPS = 'vips_success';
 
-    public string $channel;
+    public Channel $channel;
 
     public string $message;
 
     public function __construct(string $message)
     {
         parent::__construct($message);
-
-        $this->channel = substr(strstr($this->commandSuffix, '#'), 1);
         $this->message = $message;
     }
 
     public function handle(Client $client, array $channels): array
     {
+        if (array_key_exists($this->commandSuffix, $channels)) {
+            $this->channel = $channels[$this->commandSuffix];
+        }
+
         $msgId = $this->tags['msg-id'] ?? '';
         $events = [
-            new Event('notice', [$this->channel, $msgId]),
+            new NoticeEvent($this->channel, $msgId),
         ];
 
-        if(($event = $this->getSpecificEvent($msgId))) {
+        if (($event = $this->getSpecificEvent($msgId))) {
             $events[] = $event;
         }
 
@@ -48,31 +57,31 @@ class NoticeMessage extends IrcMessage
     {
         switch ($msgId) {
             case self::TAG_EMOTEONLY_OFF:
-                return new Event('emoteonly', [$this->channel, false]);
+                return new EmoteOnlyModeEvent($this->channel, false);
             case self::TAG_EMOTEONLY_ON:
-                return new Event('emoteonly', [$this->channel, true]);
+                return new EmoteOnlyModeEvent($this->channel, true);
             case self::TAG_NO_MODS:
-                return new Event('mods', [$this->channel, []]);
+                return new ModsEvent($this->channel, []);
             case self::TAG_NO_VIPS:
-                return new Event('vips', [$this->channel, []]);
+                return new VipsEvent($this->channel, []);
             case self::TAG_R9K_MODE_OFF:
-                return new Event('r9kmode', [$this->channel, false]);
+                return new R9kModeEvent($this->channel, false);
             case self::TAG_R9K_MODE_ON:
-                return new Event('r9kmode', [$this->channel, true]);
+                return new R9kModeEvent($this->channel, true);
             case self::TAG_ROOM_MODS:
                 $mods = array_filter(explode(', ', strtolower(explode(': ', $this->message)[1])), static fn($n) => $n);
-                return new Event('r9kmode', [$this->channel, $mods]);
+                return new ModsEvent($this->channel, $mods);
             case self::TAG_SUBMODE_OFF:
-                return new Event('subs', [$this->channel, false]);
+                return new SubsOnlyModeEvent($this->channel, false);
             case self::TAG_SUBMODE_ON:
-                return new Event('subs', [$this->channel, true]);
+                return new SubsOnlyModeEvent($this->channel, true);
             case self::TAG_VIPS:
                 if (substr($this->message, -strlen($this->message)) === '.') {
                     $this->message = substr($this->message, 0, -1);
                 }
                 $vips = array_filter(explode(', ', strtolower(explode(': ', $this->message)[1])), static fn($n) => $n);
 
-                return new Event('vips', [$this->channel, $vips]);
+                return new VipsEvent($this->channel, $vips);
             default:
                 return null;
         }

@@ -3,8 +3,9 @@
 namespace GhostZero\Tmi\Events\Irc;
 
 use GhostZero\Tmi\Channel;
+use GhostZero\Tmi\Events\Event;
 
-class TopicChangeEvent
+class TopicChangeEvent extends Event
 {
     public Channel $channel;
     public string $topic;

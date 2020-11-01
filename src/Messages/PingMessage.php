@@ -3,7 +3,6 @@
 namespace GhostZero\Tmi\Messages;
 
 use GhostZero\Tmi\Client;
-use GhostZero\Tmi\Events\Event;
 use GhostZero\Tmi\Events\Irc\PingEvent;
 
 class PingMessage extends IrcMessage
@@ -13,8 +12,7 @@ class PingMessage extends IrcMessage
         $client->write("PONG :$this->payload");
 
         return [
-            new Event('ping'),
-            new Event(PingEvent::class, [new PingEvent()]),
+            new PingEvent(),
         ];
     }
 }

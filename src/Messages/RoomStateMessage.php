@@ -2,27 +2,28 @@
 
 namespace GhostZero\Tmi\Messages;
 
+use GhostZero\Tmi\Channel;
 use GhostZero\Tmi\Client;
 use GhostZero\Tmi\Events\Event;
+use GhostZero\Tmi\Events\Twitch\FollowersOnlyModeEvent;
+use GhostZero\Tmi\Events\Twitch\RoomStateEvent;
+use GhostZero\Tmi\Events\Twitch\SlowModeEvent;
 
 class RoomStateMessage extends IrcMessage
 {
-    public string $channel;
-
-    public function __construct(string $message)
-    {
-        parent::__construct($message);
-
-        $this->channel = substr(strstr($this->commandSuffix, '#'), 1);
-    }
+    public Channel $channel;
 
     public function handle(Client $client, array $channels): array
     {
+        if (array_key_exists($this->commandSuffix, $channels)) {
+            $this->channel = $channels[$this->commandSuffix];
+        }
+
         $events = [
-            new Event('roomstate', [$this->channel, $this->tags]),
+            new RoomStateEvent($this->channel, $this->tags),
         ];
 
-        if (($event = $this->getSpecificEvent())) {
+        if ($event = $this->getSpecificEvent()) {
             $events[] = $event;
         }
 
@@ -35,20 +36,20 @@ class RoomStateMessage extends IrcMessage
 
         if (array_key_exists('slow', $tags->getTags())) {
             if (is_bool($tags['slow']) && !$tags['slow']) {
-                return new Event('slow', [$this->channel, false, 0]);
+                return new SlowModeEvent($this->channel, false);
             }
 
             $minutes = (int)$tags['slow'];
-            return new Event('slow', [$this->channel, true, $minutes]);
+            return new SlowModeEvent($this->channel, true, $minutes);
         }
 
         if (array_key_exists('followers-only', $tags->getTags())) {
             if ($tags['followers-only'] === '-1') {
-                return new Event('followersonly', [$this->channel, false, 0]);
+                return new FollowersOnlyModeEvent($this->channel, false);
             }
 
             $minutes = (int)$tags['followers-only'];
-            return new Event('followersonly', [$this->channel, true, $minutes]);
+            return new FollowersOnlyModeEvent($this->channel, true, $minutes);
         }
 
         return null;

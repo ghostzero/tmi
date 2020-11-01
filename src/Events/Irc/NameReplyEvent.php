@@ -3,8 +3,9 @@
 namespace GhostZero\Tmi\Events\Irc;
 
 use GhostZero\Tmi\Channel;
+use GhostZero\Tmi\Events\Event;
 
-class NameReplyEvent
+class NameReplyEvent extends Event
 {
     public Channel $channel;
     public array $names;

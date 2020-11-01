@@ -3,6 +3,7 @@
 namespace GhostZero\Tmi\Messages;
 
 use GhostZero\Tmi\Client;
+use GhostZero\Tmi\Events\Event;
 use GhostZero\Tmi\Tags;
 
 class IrcMessage
@@ -29,7 +30,7 @@ class IrcMessage
      *
      * @param Client $client
      * @param array $channels
-     * @return array
+     * @return Event[]
      */
     public function handle(Client $client, array $channels): array
     {

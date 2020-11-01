@@ -3,7 +3,8 @@
 namespace GhostZero\Tmi\Messages;
 
 use GhostZero\Tmi\Client;
-use GhostZero\Tmi\Events\Event;
+use GhostZero\Tmi\Events\Twitch\HostingEvent;
+use GhostZero\Tmi\Events\Twitch\UnhostEvent;
 
 class HostTargetMessage extends IrcMessage
 {
@@ -15,23 +16,26 @@ class HostTargetMessage extends IrcMessage
     {
         parent::__construct($message);
 
-        $this->channel = substr(strstr($this->commandSuffix, '#'), 1);
         $this->message = $message;
     }
 
     public function handle(Client $client, array $channels): array
     {
+        if (array_key_exists($this->commandSuffix, $channels)) {
+            $this->channel = $channels[$this->commandSuffix];
+        }
+
         $msgSplit = explode(' ', $this->payload);
         $viewers = (int)($msgSplit[1] ?? 0);
 
         if ($msgSplit[0] === '-') {
             return [
-                new Event('unhost', [$this->channel, $viewers]),
+                new UnhostEvent($this->channel, $viewers),
             ];
         }
 
         return [
-            new Event('hosting', [$this->channel, $msgSplit[0], $viewers]),
+            new HostingEvent($this->channel, $msgSplit[0], $viewers),
         ];
     }
 }

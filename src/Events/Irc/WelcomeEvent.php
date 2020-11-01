@@ -2,7 +2,9 @@
 
 namespace GhostZero\Tmi\Events\Irc;
 
-class WelcomeEvent
+use GhostZero\Tmi\Events\Event;
+
+class WelcomeEvent extends Event
 {
 
 }

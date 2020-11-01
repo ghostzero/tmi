@@ -127,6 +127,11 @@ class Client
         return $this->options;
     }
 
+    public function any(Closure $closure): self
+    {
+        return $this->on('*', $closure);
+    }
+
     public function on(string $event, Closure $closure): self
     {
         $this->eventHandler->addHandler($event, $closure);

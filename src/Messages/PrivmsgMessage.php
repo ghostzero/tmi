@@ -4,8 +4,12 @@ namespace GhostZero\Tmi\Messages;
 
 use GhostZero\Tmi\Channel;
 use GhostZero\Tmi\Client;
-use GhostZero\Tmi\Events\Event;
+use GhostZero\Tmi\Events\Inspector\InspectorEvent;
+use GhostZero\Tmi\Events\Inspector\InspectorReadyEvent;
 use GhostZero\Tmi\Events\Irc\PrivmsgEvent;
+use GhostZero\Tmi\Events\Twitch\CheerEvent;
+use GhostZero\Tmi\Events\Twitch\HostedEvent;
+use GhostZero\Tmi\Events\Twitch\MessageEvent;
 
 class PrivmsgMessage extends IrcMessage
 {
@@ -35,11 +39,9 @@ class PrivmsgMessage extends IrcMessage
 
         if ($this->user === 'tmi_inspector') {
             $payload = json_decode($this->message, false, 512, JSON_THROW_ON_ERROR);
-            $events = [
-                new Event('inspector_payload', [$payload]),
-            ];
+            $events = [new InspectorEvent($payload)];
             if ($payload->event === 'ready') {
-                $events[] = new Event('inspector', [$payload->url]);
+                $events[] = new InspectorReadyEvent($payload->url);
             }
 
             return $events;
@@ -49,27 +51,30 @@ class PrivmsgMessage extends IrcMessage
             $autohost = (bool)strpos($this->message, 'auto');
             if ((bool)strpos($this->message, 'hosting you for')) {
                 $count = (int)explode(' ', substr($this->message, strpos($this->message, 'hosting you for')))[3];
-                return [new Event('hosted', [$this->channel, $this->user, $count, $autohost])];
+                return [
+                    new HostedEvent($this->channel, $this->user, $count, $autohost)
+                ];
             }
 
             if ((bool)strpos($this->message, 'hosting you')) {
-                return [new Event('hosted', [$this->channel, $this->user, 0, $autohost])];
+                return [
+                    new HostedEvent($this->channel, $this->user, 0, $autohost),
+                ];
             }
         } elseif ($this->target[0] === '#') {
             $events = [
-                new Event('message', [$this->channel, $this->tags, $this->user, $this->message, $self])
+                new MessageEvent($this->channel, $this->tags, $this->user, $this->message, $self)
             ];
 
             if ($this->tags['bits']) {
-                $events[] = new Event('cheer', [$this->channel, $this->tags, $this->user, $this->message, $self]);
+                $events[] = new CheerEvent($this->channel, $this->tags, $this->user, $this->message, $self);
             }
 
             return $events;
         }
 
         return [
-            new Event('privmsg', [$this->target, $this->tags, $this->user, $this->message, $self]),
-            new Event(PrivmsgEvent::class, [new PrivmsgEvent($this->target, $this->tags, $this->user, $this->message, $self)]),
+            new PrivmsgEvent($this->target, $this->tags, $this->user, $this->message, $self)
         ];
     }
 }

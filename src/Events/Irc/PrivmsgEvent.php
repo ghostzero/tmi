@@ -3,9 +3,10 @@
 namespace GhostZero\Tmi\Events\Irc;
 
 use GhostZero\Tmi\Channel;
+use GhostZero\Tmi\Events\Event;
 use GhostZero\Tmi\Tags;
 
-class PrivmsgEvent
+class PrivmsgEvent extends Event
 {
     /**
      * @var Channel|string

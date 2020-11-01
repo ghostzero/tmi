@@ -2,7 +2,9 @@
 
 namespace GhostZero\Tmi\Events\Irc;
 
-class PingEvent
+use GhostZero\Tmi\Events\Event;
+
+class PingEvent extends Event
 {
 
 }

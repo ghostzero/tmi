@@ -2,7 +2,9 @@
 
 namespace GhostZero\Tmi\Events\Irc;
 
-class MotdEvent
+use GhostZero\Tmi\Events\Event;
+
+class MotdEvent extends Event
 {
     public string $message;
 
