@@ -5,6 +5,7 @@ namespace GhostZero\Tmi\Messages;
 use GhostZero\Tmi\Channel;
 use GhostZero\Tmi\Client;
 use GhostZero\Tmi\Events\Event;
+use GhostZero\Tmi\Events\Irc\PrivmsgEvent;
 
 class PrivmsgMessage extends IrcMessage
 {
@@ -66,6 +67,9 @@ class PrivmsgMessage extends IrcMessage
             return $events;
         }
 
-        return [new Event('privmsg', [$this->user, $this->tags, $this->target, $this->message, $self])];
+        return [
+            new Event('privmsg', [$this->target, $this->tags, $this->user, $this->message, $self]),
+            new Event(PrivmsgEvent::class, [new PrivmsgEvent($this->target, $this->tags, $this->user, $this->message, $self)]),
+        ];
     }
 }

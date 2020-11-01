@@ -5,6 +5,7 @@ namespace GhostZero\Tmi\Messages;
 use GhostZero\Tmi\Channel;
 use GhostZero\Tmi\Client;
 use GhostZero\Tmi\Events\Event;
+use GhostZero\Tmi\Events\Irc\KickEvent;
 
 class KickMessage extends IrcMessage
 {
@@ -36,6 +37,7 @@ class KickMessage extends IrcMessage
 
         return [
             new Event('kick', [$this->channel, $this->user, $this->message]),
+            new Event(KickEvent::class, [new KickEvent($this->channel, $this->user, $this->message)]),
         ];
     }
 }

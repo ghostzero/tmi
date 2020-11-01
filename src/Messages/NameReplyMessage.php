@@ -4,6 +4,7 @@ namespace GhostZero\Tmi\Messages;
 
 use GhostZero\Tmi\Client;
 use GhostZero\Tmi\Events\Event;
+use GhostZero\Tmi\Events\Irc\NameReplyEvent;
 
 class NameReplyMessage extends IrcMessage
 {
@@ -21,12 +22,14 @@ class NameReplyMessage extends IrcMessage
 
     public function handle(Client $client, array $channels): array
     {
+        $channel = $client->getChannel($this->channel);
         if (!empty($this->names)) {
-            $client->getChannel($this->channel)->setUsers($this->names);
+            $channel->setUsers($this->names);
         }
 
         return [
             new Event('names', [$this->channel, $this->names]),
+            new Event(NameReplyEvent::class, [new NameReplyEvent($channel, $this->names)]),
         ];
     }
 }

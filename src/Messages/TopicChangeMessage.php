@@ -4,6 +4,7 @@ namespace GhostZero\Tmi\Messages;
 
 use GhostZero\Tmi\Client;
 use GhostZero\Tmi\Events\Event;
+use GhostZero\Tmi\Events\Irc\TopicChangeEvent;
 
 class TopicChangeMessage extends IrcMessage
 {
@@ -21,10 +22,12 @@ class TopicChangeMessage extends IrcMessage
 
     public function handle(Client $client, array $channels): array
     {
-        $client->getChannel($this->channel)->setTopic($this->topic);
+        $channel = $client->getChannel($this->channel);
+        $channel->setTopic($this->topic);
 
         return [
             new Event('topic', [$this->channel, $this->topic]),
+            new Event(TopicChangeEvent::class, [new TopicChangeEvent($channel, $this->topic)]),
         ];
     }
 

@@ -4,6 +4,7 @@ namespace GhostZero\Tmi\Messages;
 
 use GhostZero\Tmi\Client;
 use GhostZero\Tmi\Events\Event;
+use GhostZero\Tmi\Events\Irc\WelcomeEvent;
 
 class WelcomeMessage extends IrcMessage
 {
@@ -15,6 +16,7 @@ class WelcomeMessage extends IrcMessage
 
         return [
             new Event('registered'),
+            new Event(WelcomeEvent::class, [new WelcomeEvent()]),
         ];
     }
 }
