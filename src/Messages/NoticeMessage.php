@@ -37,10 +37,11 @@ class NoticeMessage extends IrcMessage
 
     public function handle(Client $client, array $channels): array
     {
-        if (array_key_exists($this->commandSuffix, $channels)) {
-            $this->channel = $channels[$this->commandSuffix];
+        if (!array_key_exists($this->commandSuffix, $channels)) {
+            return [];
         }
 
+        $this->channel = $channels[$this->commandSuffix];
         $msgId = $this->tags['msg-id'] ?? '';
         $events = [
             new NoticeEvent($this->channel, $msgId),
