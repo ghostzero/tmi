@@ -68,6 +68,12 @@ class IrcMessageParser
             case 'HOSTTARGET':
                 $msg = new HostTargetMessage($message);
                 break;
+            case 'JOIN':
+                $msg = new JoinMessage($message);
+                break;
+            case 'PART':
+                $msg = new PartMessage($message);
+                break;
 
             default:
                 $msg = new IrcMessage($message);
