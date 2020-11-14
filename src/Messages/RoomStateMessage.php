@@ -17,6 +17,8 @@ class RoomStateMessage extends IrcMessage
     {
         if (array_key_exists($this->commandSuffix, $channels)) {
             $this->channel = $channels[$this->commandSuffix];
+        } else {
+            $this->channel = new Channel($this->commandSuffix);
         }
 
         $events = [

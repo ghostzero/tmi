@@ -19,7 +19,7 @@ trait Irc
     public function join(string $channel): void
     {
         $channel = $this->channelName($channel);
-        $this->channels[$channel] = new Channel($channel);
+        $this->channels[$channel] = new Channel($channel, true);
         $this->write("JOIN {$channel}");
     }
 

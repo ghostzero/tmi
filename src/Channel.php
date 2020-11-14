@@ -10,9 +10,12 @@ class Channel
 
     private array $users = [];
 
-    public function __construct(string $channel)
+    private bool $persisted;
+
+    public function __construct(string $channel, bool $persisted = false)
     {
         $this->channel = $channel;
+        $this->persisted = $persisted;
     }
 
     public function getName(): string
@@ -38,6 +41,11 @@ class Channel
     public function setUsers(array $users): void
     {
         $this->users = $users;
+    }
+
+    public function isPersisted(): bool
+    {
+        return $this->persisted;
     }
 
     public function __toString()

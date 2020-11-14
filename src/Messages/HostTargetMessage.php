@@ -2,6 +2,7 @@
 
 namespace GhostZero\Tmi\Messages;
 
+use GhostZero\Tmi\Channel;
 use GhostZero\Tmi\Client;
 use GhostZero\Tmi\Events\Twitch\HostingEvent;
 use GhostZero\Tmi\Events\Twitch\UnhostEvent;
@@ -23,6 +24,8 @@ class HostTargetMessage extends IrcMessage
     {
         if (array_key_exists($this->commandSuffix, $channels)) {
             $this->channel = $channels[$this->commandSuffix];
+        } else {
+            $this->channel = new Channel($this->commandSuffix);
         }
 
         $msgSplit = explode(' ', $this->payload);

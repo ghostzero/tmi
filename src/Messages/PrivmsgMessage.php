@@ -33,6 +33,8 @@ class PrivmsgMessage extends IrcMessage
     {
         if (array_key_exists($this->target, $channels)) {
             $this->channel = $channels[$this->target];
+        } else {
+            $this->channel = new Channel($this->target);
         }
 
         $self = $client->getOptions()->getNickname() === $this->user;

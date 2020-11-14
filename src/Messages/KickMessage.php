@@ -28,6 +28,8 @@ class KickMessage extends IrcMessage
     {
         if (array_key_exists($this->target, $channels)) {
             $this->channel = $channels[$this->target];
+        } else {
+            $this->channel = new Channel($this->target);
         }
 
         if ($client->getOptions()->getNickname() === $this->user && $client->getOptions()->shouldAutoRejoin()) {
