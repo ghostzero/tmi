@@ -8,17 +8,14 @@ use GhostZero\Tmi\Tags;
 
 class JoinEvent extends Event
 {
-    /**
-     * @var Channel|string
-     */
-    public Channel $target;
+    public Channel $channel;
     public Tags $tags;
     public string $message;
     public string $user;
 
-    public function __construct($target, Tags $tags, string $user, string $message)
+    public function __construct(Channel $channel, Tags $tags, string $user, string $message)
     {
-        $this->target = $target;
+        $this->channel = $channel;
         $this->tags = $tags;
         $this->user = $user;
         $this->message = $message;
