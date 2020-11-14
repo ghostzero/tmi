@@ -9,7 +9,7 @@ use GhostZero\Tmi\Events\Twitch\UnhostEvent;
 
 class HostTargetMessage extends IrcMessage
 {
-    public string $channel;
+    public Channel $channel;
 
     public string $message;
 
