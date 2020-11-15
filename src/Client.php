@@ -4,6 +4,7 @@ namespace GhostZero\Tmi;
 
 use Closure;
 use GhostZero\Tmi\Events\EventHandler;
+use GhostZero\Tmi\Exceptions\ParseException;
 use GhostZero\Tmi\Messages\IrcMessage;
 use GhostZero\Tmi\Messages\IrcMessageParser;
 use React\Dns\Resolver\Factory;
@@ -61,8 +62,12 @@ class Client
             $this->write('CAP REQ :twitch.tv/membership twitch.tv/tags twitch.tv/commands');
 
             $this->connection->on('data', function ($data) {
-                foreach ($this->ircMessageParser->parse($data) as $message) {
-                    $this->handleIrcMessage($message);
+                foreach (explode("\n", $data) as $message) {
+                    if (empty(trim($message))) {
+                        continue;
+                    }
+
+                    $this->handleIrcMessage($this->ircMessageParser->parseSingle($message));
                 }
             });
 

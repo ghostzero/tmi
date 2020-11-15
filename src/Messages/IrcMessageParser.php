@@ -2,8 +2,11 @@
 
 namespace GhostZero\Tmi\Messages;
 
+use Error;
 use Generator;
+use GhostZero\Tmi\Exceptions\ParseException;
 use GhostZero\Tmi\Tags;
+use Throwable;
 
 class IrcMessageParser
 {
@@ -11,6 +14,7 @@ class IrcMessageParser
     /**
      * @param string $message raw message
      * @return Generator|IrcMessage[]|null
+     * @throw ParseException
      */
     public function parse(string $message): ?Generator
     {
@@ -23,64 +27,73 @@ class IrcMessageParser
         }
     }
 
-    private function parseSingle(string $message): IrcMessage
+    /**
+     * @param string $message
+     * @return IrcMessage
+     * @throw ParseException
+     */
+    public function parseSingle(string $message): IrcMessage
     {
-        [$tags, $message] = $this->parseTags($message);
+        try {
+            [$tags, $message] = $this->parseTags($message);
 
-        switch ($this->getCommand($message)) {
-            case 'KICK':
-                $msg = new KickMessage($message);
-                break;
+            switch ($this->getCommand($message)) {
+                case 'KICK':
+                    $msg = new KickMessage($message);
+                    break;
 
-            case 'PING':
-                $msg = new PingMessage($message);
-                break;
+                case 'PING':
+                    $msg = new PingMessage($message);
+                    break;
 
-            case 'PRIVMSG':
-                $msg = new PrivmsgMessage($message);
-                break;
+                case 'PRIVMSG':
+                    $msg = new PrivmsgMessage($message);
+                    break;
 
-            case IrcCommand::RPL_WELCOME:
-                $msg = new WelcomeMessage($message);
-                break;
+                case IrcCommand::RPL_WELCOME:
+                    $msg = new WelcomeMessage($message);
+                    break;
 
-            case 'TOPIC':
-            case IrcCommand::RPL_TOPIC:
-                $msg = new TopicChangeMessage($message);
-                break;
+                case 'TOPIC':
+                case IrcCommand::RPL_TOPIC:
+                    $msg = new TopicChangeMessage($message);
+                    break;
 
-            case IrcCommand::RPL_NAMREPLY:
-                $msg = new NameReplyMessage($message);
-                break;
+                case IrcCommand::RPL_NAMREPLY:
+                    $msg = new NameReplyMessage($message);
+                    break;
 
-            case IrcCommand::RPL_MOTD:
-                $msg = new MotdMessage($message);
-                break;
-            case 'USERNOTICE':
-                $msg = new UserNoticeMessage($message);
-                break;
-            case 'NOTICE':
-                $msg = new NoticeMessage($message);
-                break;
-            case 'ROOMSTATE':
-                $msg = new RoomStateMessage($message);
-                break;
-            case 'HOSTTARGET':
-                $msg = new HostTargetMessage($message);
-                break;
-            case 'JOIN':
-                $msg = new JoinMessage($message);
-                break;
-            case 'PART':
-                $msg = new PartMessage($message);
-                break;
+                case IrcCommand::RPL_MOTD:
+                    $msg = new MotdMessage($message);
+                    break;
+                case 'USERNOTICE':
+                    $msg = new UserNoticeMessage($message);
+                    break;
+                case 'NOTICE':
+                    $msg = new NoticeMessage($message);
+                    break;
+                case 'ROOMSTATE':
+                    $msg = new RoomStateMessage($message);
+                    break;
+                case 'HOSTTARGET':
+                    $msg = new HostTargetMessage($message);
+                    break;
+                case 'JOIN':
+                    $msg = new JoinMessage($message);
+                    break;
+                case 'PART':
+                    $msg = new PartMessage($message);
+                    break;
 
-            default:
-                $msg = new IrcMessage($message);
-                break;
+                default:
+                    $msg = new IrcMessage($message);
+                    break;
+            }
+
+            return $msg->withTags($tags);
+        } catch (Throwable $throwable) {
+            throw ParseException::fromParseSingle($message, $throwable);
         }
-
-        return $msg->withTags($tags);
     }
 
     private function getCommand(string $message): string
