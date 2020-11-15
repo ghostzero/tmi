@@ -67,7 +67,11 @@ class Client
                         continue;
                     }
 
-                    $this->handleIrcMessage($this->ircMessageParser->parseSingle($message));
+                    try {
+                        $this->handleIrcMessage($this->ircMessageParser->parseSingle($message));
+                    } catch (ParseException $exception) {
+                        $this->debug($exception->getMessage());
+                    }
                 }
             });
 
