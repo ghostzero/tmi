@@ -52,4 +52,13 @@ class Channel
     {
         return $this->getName();
     }
+
+    public static function sanitize(string $channel): string
+    {
+        if ($channel[0] !== '#') {
+            $channel = "#$channel";
+        }
+
+        return strtolower($channel);
+    }
 }

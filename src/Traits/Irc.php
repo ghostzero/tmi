@@ -12,20 +12,20 @@ trait Irc
 {
     public function say(string $channel, string $message): void
     {
-        $channel = $this->channelName($channel);
+        $channel = Channel::sanitize($channel);
         $this->write("PRIVMSG {$channel} :{$message}");
     }
 
     public function join(string $channel): void
     {
-        $channel = $this->channelName($channel);
+        $channel = Channel::sanitize($channel);
         $this->channels[$channel] = new Channel($channel, true);
         $this->write("JOIN {$channel}");
     }
 
     public function part(string $channel): void
     {
-        $channel = $this->channelName($channel);
+        $channel = Channel::sanitize($channel);
         unset($this->channels[$channel]);
         $this->write("PART {$channel}");
     }
@@ -38,14 +38,5 @@ trait Irc
     public function getChannel(string $channel): Channel
     {
         return $this->channels[$channel];
-    }
-
-    private function channelName(string $channel): string
-    {
-        if ($channel[0] !== '#') {
-            $channel = "#$channel";
-        }
-
-        return $channel;
     }
 }
