@@ -20,7 +20,7 @@
     }
   },
   "require": {
-    "php": "^7.4",
+    "php": "^7.4|^8.0",
     "react/socket": "^1.6",
     "ext-mbstring": "*",
     "ext-json": "*"
