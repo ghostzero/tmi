@@ -7,7 +7,14 @@ use GhostZero\Tmi\Events\Event;
 
 class ModsEvent extends Event
 {
+    /**
+     * @var Channel IRC Channel state object
+     */
     public Channel $channel;
+
+    /**
+     * @var array List of usernames
+     */
     public array $users;
 
     public function __construct(Channel $channel, array $users)

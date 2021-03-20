@@ -11,7 +11,14 @@ class RoomStateEvent extends Event
 {
     use HasTagSignature;
 
+    /**
+     * @var Channel IRC Channel state object
+     */
     public Channel $channel;
+
+    /**
+     * @var Tags Twitch Tags object
+     */
     public Tags $tags;
 
     public function __construct(Channel $channel, Tags $tags)

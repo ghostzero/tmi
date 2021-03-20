@@ -11,13 +11,32 @@ class CheerEvent extends Event
 {
     use HasTagSignature;
 
+    /**
+     * @var Channel IRC Channel state object
+     */
     public Channel $channel;
-    public Tags $tags;
-    public string $user;
-    public string $message;
-    public string $self;
 
-    public function __construct(Channel $channel, Tags $tags, string $user, string $message, string $self)
+    /**
+     * @var Tags Twitch Tags object
+     */
+    public Tags $tags;
+
+    /**
+     * @var string Username of the viewer
+     */
+    public string $user;
+
+    /**
+     * @var string Message content
+     */
+    public string $message;
+
+    /**
+     * @var bool Indicates if the message is from ourselves.
+     */
+    public bool $self;
+
+    public function __construct(Channel $channel, Tags $tags, string $user, string $message, bool $self)
     {
         $this->channel = $channel;
         $this->tags = $tags;

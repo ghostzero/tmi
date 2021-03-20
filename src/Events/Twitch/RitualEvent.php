@@ -11,10 +11,29 @@ class RitualEvent extends Event
 {
     use HasTagSignature;
 
+    /**
+     * @var Channel IRC Channel state object
+     */
     public Channel $channel;
+
+    /**
+     * @var string Name of the ritual
+     */
     public string $ritual;
+
+    /**
+     * @var string Username of the viewer
+     */
     public string $user;
+
+    /**
+     * @var Tags Twitch Tags object
+     */
     public Tags $tags;
+
+    /**
+     * @var string Message content
+     */
     public string $message;
 
     public function __construct(Channel $channel, string $ritual, string $user, Tags $tags, string $message)

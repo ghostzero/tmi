@@ -12,10 +12,29 @@ class SubMysteryGiftEvent extends Event
 {
     use HasTagSignature;
 
+    /**
+     * @var Channel IRC Channel state object
+     */
     public Channel $channel;
+
+    /**
+     * @var string Username of the viewer
+     */
     public string $user;
+
+    /**
+     * @var int Count of given gifts
+     */
     public int $giftSubCount;
+
+    /**
+     * @var Tags Subscription Plan object
+     */
     public Plan $plan;
+
+    /**
+     * @var Tags Twitch Tags object
+     */
     public Tags $tags;
 
     public function __construct(Channel $channel, string $user, int $giftSubCount, Plan $plan, Tags $tags)
