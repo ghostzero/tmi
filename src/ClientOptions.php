@@ -61,4 +61,9 @@ class ClientOptions
     {
         return $this->options['identity']['type'] ?? 'verified';
     }
+
+    public function getReconnectDelay(): int
+    {
+        return $this->options['connection']['reconnect_delay'] ?? 3;
+    }
 }

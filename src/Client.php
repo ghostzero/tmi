@@ -55,12 +55,6 @@ class Client
             $this->connected = true;
             $this->channels = [];
 
-            // login & request all twitch Kappabilities
-            $identity = $this->options->getIdentity();
-            $this->write("PASS {$identity['password']}");
-            $this->write("NICK {$identity['username']}");
-            $this->write('CAP REQ :twitch.tv/membership twitch.tv/tags twitch.tv/commands');
-
             $this->connection->on('data', function ($data) {
                 foreach (explode("\n", $data) as $message) {
                     if (empty(trim($message))) {
@@ -83,6 +77,12 @@ class Client
             $this->connection->on('end', function () {
                 $this->connection->close();
             });
+
+            // login & request all twitch Kappabilities
+            $identity = $this->options->getIdentity();
+            $this->write("PASS {$identity['password']}");
+            $this->write("NICK {$identity['username']}");
+            $this->write('CAP REQ :twitch.tv/membership twitch.tv/tags twitch.tv/commands');
         }, fn($error) => $this->reconnect($error));
 
         $this->loop->run();
@@ -161,7 +161,9 @@ class Client
     private function reconnect($error): void
     {
         if ($this->options->shouldReconnect()) {
-            $this->debug('Initialize reconnect... Error: ' . $error);
+            $seconds = $this->options->getReconnectDelay();
+            $this->debug("Initialize reconnect in {$seconds} seconds... Error: " . $error);
+            sleep($seconds);
             $this->connect();
         }
     }
