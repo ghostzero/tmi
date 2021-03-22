@@ -1,5 +1,12 @@
 # PHP Twitch Messaging Interface
 
+<a href="https://packagist.org/packages/ghostzero/tmi"><img src="https://img.shields.io/packagist/dt/ghostzero/tmi" alt="Total Downloads"></a>
+<a href="https://packagist.org/packages/ghostzero/tmi"><img src="https://img.shields.io/packagist/v/ghostzero/tmi" alt="Latest Stable Version"></a>
+<a href="https://packagist.org/packages/ghostzero/tmi"><img src="https://img.shields.io/packagist/l/ghostzero/tmi" alt="License"></a>
+<a href="https://discord.gg/qsxVMNg"><img src="https://discordapp.com/api/guilds/552952675369484301/embed.png?style=shield" alt="Discord"></a>
+
+## Introduction
+
 Inspired by [tmi.js](https://github.com/tmijs/tmi.js), [php-irc-client](https://github.com/jerodev/php-irc-client) this package is a full featured, high performance Twitch IRC client written in PHP 7.4.
 
 Also have a look at [ghostzero/tmi-cluster](https://github.com/ghostzero/tmi-cluster). TMI Cluster is a Laravel package that makes the PHP TMI client scalable.
@@ -11,6 +18,10 @@ Also have a look at [ghostzero/tmi-cluster](https://github.com/ghostzero/tmi-clu
 - Supports Twitch IRC Tags (IRC v3)
 - Supports Twitch IRC Membership
 - Supports Twitch IRC Commands
+
+## Official Documentation
+
+You can view our official documentation [here](https://tmiphp.com/docs/).
 
 ## Getting Started (w/o OAuth Token)
 
