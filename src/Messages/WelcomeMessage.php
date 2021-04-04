@@ -7,7 +7,7 @@ use GhostZero\Tmi\Events\Irc\WelcomeEvent;
 
 class WelcomeMessage extends IrcMessage
 {
-    public function handle(Client $client, array $clients): array
+    public function handle(Client $client, array $channels): array
     {
         foreach ($client->getOptions()->getChannels() as $channel) {
             $client->join($channel);
