@@ -16,6 +16,11 @@ trait Irc
         $this->write("PRIVMSG {$channel} :{$message}");
     }
 
+    public function whisper(string $user, string $message): void
+    {
+        $this->say('#tmi_inspector', sprintf('/w %s %s', $user, $message));
+    }
+
     public function join(string $channel): void
     {
         $channel = Channel::sanitize($channel);
