@@ -42,7 +42,7 @@ class Client
         $this->eventHandler = new EventHandler();
     }
 
-    public function connect(): void
+    public function connect(?callable $execute = null): void
     {
         $tcpConnector = new TcpConnector($this->loop);
         $dnsResolverFactory = new Factory();
@@ -50,7 +50,7 @@ class Client
         $dnsConnector = new DnsConnector($tcpConnector, $dns);
         $connectorPromise = $this->getConnectorPromise($dnsConnector);
 
-        $connectorPromise->then(function (ConnectionInterface $connection) {
+        $connectorPromise->then(function (ConnectionInterface $connection) use ($execute) {
             $this->connection = $connection;
             $this->connected = true;
             $this->channels = [];
@@ -69,9 +69,12 @@ class Client
                 }
             });
 
-            $this->connection->on('close', function () {
+            $this->connection->on('close', function () use ($execute) {
                 $this->connected = false;
-                $this->reconnect('Connection closed by Twitch.');
+
+                if (is_null($execute)) {
+                    $this->reconnect('Connection closed by Twitch.');
+                }
             });
 
             $this->connection->on('end', function () {
@@ -83,6 +86,12 @@ class Client
             $this->write("PASS {$identity['password']}");
             $this->write("NICK {$identity['username']}");
             $this->write('CAP REQ :twitch.tv/membership twitch.tv/tags twitch.tv/commands');
+
+            if (!is_null($execute)) {
+              $this->loop->addTimer($this->options->getExecutionTimeout(), fn () => $this->close());
+
+              $execute();
+            }
         }, fn($error) => $this->reconnect($error));
 
         $this->loop->run();

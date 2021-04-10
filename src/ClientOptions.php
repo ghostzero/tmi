@@ -16,6 +16,11 @@ class ClientOptions
         return $this->options['options']['debug'] ?? false;
     }
 
+    public function getExecutionTimeout(): float
+    {
+        return (float) ($this->options['options']['execution_timeout'] ?? 1.5);
+    }
+
     public function getIdentity(): array
     {
         $default = ['username' => 'justinfan' . random_int(1000, 80000), 'password' => 'SCHMOOPIIE'];
