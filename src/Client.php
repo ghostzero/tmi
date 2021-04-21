@@ -2,7 +2,6 @@
 
 namespace GhostZero\Tmi;
 
-use Closure;
 use GhostZero\Tmi\Events\EventHandler;
 use GhostZero\Tmi\Exceptions\ParseException;
 use GhostZero\Tmi\Messages\IrcMessage;
@@ -147,12 +146,12 @@ class Client
         return $this->options;
     }
 
-    public function any(Closure $closure): self
+    public function any(callable $closure): self
     {
         return $this->on('*', $closure);
     }
 
-    public function on(string $event, Closure $closure): self
+    public function on(string $event, callable $closure): self
     {
         $this->eventHandler->addHandler($event, $closure);
 
