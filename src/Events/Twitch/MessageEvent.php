@@ -4,10 +4,11 @@ namespace GhostZero\Tmi\Events\Twitch;
 
 use GhostZero\Tmi\Channel;
 use GhostZero\Tmi\Events\Event;
+use GhostZero\Tmi\Events\WithinCoroutine;
 use GhostZero\Tmi\Tags;
 use GhostZero\Tmi\Traits\HasTagSignature;
 
-class MessageEvent extends Event
+class MessageEvent extends Event implements WithinCoroutine
 {
     use HasTagSignature;
 
