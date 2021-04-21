@@ -4,6 +4,7 @@ namespace GhostZero\Tmi;
 
 use Closure;
 use GhostZero\Tmi\Events\EventHandler;
+use GhostZero\Tmi\Events\WithinCoroutine;
 use GhostZero\Tmi\Exceptions\ParseException;
 use GhostZero\Tmi\Messages\IrcMessage;
 use GhostZero\Tmi\Messages\IrcMessageParser;
@@ -15,16 +16,19 @@ use React\Socket\DnsConnector;
 use React\Socket\SecureConnector;
 use React\Socket\TcpConnector;
 use RuntimeException;
+use Swoole\Coroutine;
+use Swoole\Runtime;
+use function Swoole\Coroutine\run;
 
 class Client
 {
     use Traits\Irc;
 
-    protected ConnectionInterface $connection;
+    private ConnectionInterface $connection;
 
     protected bool $connected;
 
-    protected LoopInterface $loop;
+    private LoopInterface $loop;
 
     protected ClientOptions $options;
 
@@ -50,42 +54,48 @@ class Client
         $dnsConnector = new DnsConnector($tcpConnector, $dns);
         $connectorPromise = $this->getConnectorPromise($dnsConnector);
 
-        $connectorPromise->then(function (ConnectionInterface $connection) {
-            $this->connection = $connection;
-            $this->connected = true;
-            $this->channels = [];
+        $connectorPromise->then([$this, 'handleConnection'], fn($error) => $this->reconnect($error));
 
-            $this->connection->on('data', function ($data) {
-                foreach (explode("\n", $data) as $message) {
-                    if (empty(trim($message))) {
-                        continue;
-                    }
+        Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
+        run(function() {
+            $this->loop->run();
+        });
+    }
 
-                    try {
-                        $this->handleIrcMessage($this->ircMessageParser->parseSingle($message));
-                    } catch (ParseException $exception) {
-                        $this->debug($exception->getMessage());
-                    }
+    private function handleConnection(ConnectionInterface $connection)
+    {
+        $this->connection = $connection;
+        $this->connected = true;
+        $this->channels = [];
+
+        $this->connection->on('data', function ($data) {
+            foreach (explode("\n", $data) as $message) {
+                if (empty(trim($message))) {
+                    continue;
                 }
-            });
 
-            $this->connection->on('close', function () {
-                $this->connected = false;
-                $this->reconnect('Connection closed by Twitch.');
-            });
+                try {
+                    $this->handleIrcMessage($this->ircMessageParser->parseSingle($message));
+                } catch (ParseException $exception) {
+                    $this->debug($exception->getMessage());
+                }
+            }
+        });
 
-            $this->connection->on('end', function () {
-                $this->connection->close();
-            });
+        $this->connection->on('close', function () {
+            $this->connected = false;
+            $this->reconnect('Connection closed by Twitch.');
+        });
 
-            // login & request all twitch Kappabilities
-            $identity = $this->options->getIdentity();
-            $this->write("PASS {$identity['password']}");
-            $this->write("NICK {$identity['username']}");
-            $this->write('CAP REQ :twitch.tv/membership twitch.tv/tags twitch.tv/commands');
-        }, fn($error) => $this->reconnect($error));
+        $this->connection->on('end', function () {
+            $this->connection->close();
+        });
 
-        $this->loop->run();
+        // login & request all twitch Kappabilities
+        $identity = $this->options->getIdentity();
+        $this->write("PASS {$identity['password']}");
+        $this->write("NICK {$identity['username']}");
+        $this->write('CAP REQ :twitch.tv/membership twitch.tv/tags twitch.tv/commands');
     }
 
     public function close(): void
@@ -122,7 +132,13 @@ class Client
         $events = $message->handle($this, $this->channels);
 
         foreach ($events as $event) {
-            $this->eventHandler->invoke($event);
+            if ($event instanceof WithinCoroutine) {
+                Coroutine::create(function () use ($event) {
+                    $this->eventHandler->invoke($event);
+                });
+            } else {
+                $this->eventHandler->invoke($event);
+            }
         }
     }
 

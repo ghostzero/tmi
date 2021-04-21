@@ -23,7 +23,9 @@
     "php": "^7.4|^8.0",
     "react/socket": "^1.6",
     "ext-mbstring": "*",
-    "ext-json": "*"
+    "ext-json": "*",
+    "ext-swoole": "*",
+    "swoole/ide-helper": "^4.6"
   },
   "require-dev": {
     "phpunit/phpunit": "^9.3.3"
