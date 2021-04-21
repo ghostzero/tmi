@@ -9,7 +9,10 @@ use Tests\TestCase;
 
 class ClientTest extends TestCase
 {
-    public function testExample(): void
+    /**
+     * @medium
+     */
+    public function testClientConnection(): void
     {
         $client = new Client(new ClientOptions([
             'options' => ['debug' => true],

@@ -47,6 +47,11 @@ class ClientOptions
         return $this->options['connection']['reconnect'] ?? true;
     }
 
+    public function setShouldReconnect(bool $reconnect): void
+    {
+        $this->options['connection']['reconnect'] = $reconnect;
+    }
+
     public function shouldConnectSecure(): bool
     {
         return $this->options['connection']['secure'] ?? true;

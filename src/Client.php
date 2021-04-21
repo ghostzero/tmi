@@ -90,6 +90,8 @@ class Client
 
     public function close(): void
     {
+        $this->options->setShouldReconnect(false);
+
         if ($this->isConnected()) {
             $this->connection->close();
             $this->loop->stop();

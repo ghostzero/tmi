@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use GhostZero\Tmi\Client;
 use GhostZero\Tmi\ClientOptions;
+use GhostZero\Tmi\Events\Irc\WelcomeEvent;
 use Tests\TestCase;
 
 class FdgtTest extends TestCase
@@ -11,8 +12,10 @@ class FdgtTest extends TestCase
     /**
      * @medium
      */
-    public function testExample(): void
+    public function testFdgtConnection(): void
     {
+        self::markTestSkipped('Skipped. See https://github.com/fdgt-apis/api/issues/125');
+
         $client = new Client(new ClientOptions([
             'options' => ['debug' => true],
             'connection' => [
@@ -22,7 +25,7 @@ class FdgtTest extends TestCase
             'channels' => ['ghostzero']
         ]));
 
-        $client->on('registered', function () use ($client) {
+        $client->on(WelcomeEvent::class, function () use ($client) {
             $this->assertTrue(true);
             $client->close();
         });
