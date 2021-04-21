@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use GhostZero\Tmi\Client;
 use GhostZero\Tmi\ClientOptions;
+use GhostZero\Tmi\Events\Irc\NameReplyEvent;
 use Tests\TestCase;
 
 class ClientTest extends TestCase
@@ -20,8 +21,8 @@ class ClientTest extends TestCase
             'channels' => ['ghostzero']
         ]));
 
-        $client->on('names', function (string $channel) use ($client) {
-            $this->assertEquals('#ghostzero', $channel);
+        $client->on(NameReplyEvent::class, function (NameReplyEvent $event) use ($client) {
+            $this->assertEquals('#ghostzero', $event->channel);
             $client->close();
         });
 
