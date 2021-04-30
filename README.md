@@ -7,7 +7,7 @@
 
 ## Introduction
 
-Inspired by [tmi.js](https://github.com/tmijs/tmi.js), [php-irc-client](https://github.com/jerodev/php-irc-client) this package is a full featured, high performance Twitch IRC client written in PHP 7.4.
+Inspired by [tmi.js](https://github.com/tmijs/tmi.js) and [php-irc-client](https://github.com/jerodev/php-irc-client) this package is a full featured, high performance Twitch IRC client written in PHP 7.4.
 
 Also have a look at [ghostzero/tmi-cluster](https://github.com/ghostzero/tmi-cluster). TMI Cluster is a Laravel package that makes the PHP TMI client scalable.
 
