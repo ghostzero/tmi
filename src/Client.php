@@ -146,6 +146,11 @@ class Client
         return $this->options;
     }
 
+    public function getEventHandler(): EventHandler
+    {
+        return $this->eventHandler;
+    }
+
     public function any(callable $closure): self
     {
         return $this->on('*', $closure);

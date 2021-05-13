@@ -9,6 +9,13 @@ class ClientOptions
     public function __construct(array $options)
     {
         $this->options = $options;
+
+        if (empty($this->options['identity']['username']) || empty($this->options['identity']['password'])) {
+            $this->options['identity'] = [
+                'username' => $this->options['identity']['username'] ?? ('justinfan' . random_int(1000, 80000)),
+                'password' => 'SCHMOOPIIE'
+            ];
+        }
     }
 
     public function isDebug(): bool
@@ -18,13 +25,12 @@ class ClientOptions
 
     public function getExecutionTimeout(): float
     {
-        return (float) ($this->options['options']['execution_timeout'] ?? 1.5);
+        return (float)($this->options['options']['execution_timeout'] ?? 1.5);
     }
 
     public function getIdentity(): array
     {
-        $default = ['username' => 'justinfan' . random_int(1000, 80000), 'password' => 'SCHMOOPIIE'];
-        return $this->options['identity'] ?? $default;
+        return $this->options['identity'];
     }
 
     public function getChannels(): array
@@ -34,7 +40,7 @@ class ClientOptions
 
     public function getNickname(): string
     {
-        return $this->options['identity']['username'] ?? 'justinfan1337';
+        return $this->options['identity']['username'];
     }
 
     public function getServer(): string
