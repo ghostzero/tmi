@@ -24,9 +24,9 @@ class ClientTest extends TestCase
             'channels' => ['ghostzero']
         ]));
 
-        $client->on(NameReplyEvent::class, function (NameReplyEvent $event) use ($client) {
+        $client->on(NameReplyEvent::class, function (NameReplyEvent $event) {
             $this->assertEquals('#ghostzero', $event->channel);
-            $client->close();
+            $event->client->close();
         });
 
         $client->connect();

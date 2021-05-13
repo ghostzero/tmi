@@ -132,6 +132,7 @@ class Client
         $events = $message->handle($this, $this->channels);
 
         foreach ($events as $event) {
+            $event->client = $this; // attach client to event
             $this->eventHandler->invoke($event);
         }
     }
