@@ -4,6 +4,7 @@
 <a href="https://packagist.org/packages/ghostzero/tmi"><img src="https://img.shields.io/packagist/v/ghostzero/tmi" alt="Latest Stable Version"></a>
 <a href="https://packagist.org/packages/ghostzero/tmi"><img src="https://img.shields.io/packagist/l/ghostzero/tmi" alt="License"></a>
 <a href="https://discord.gg/qsxVMNg"><img src="https://discordapp.com/api/guilds/552952675369484301/embed.png?style=shield" alt="Discord"></a>
+<a href="https://app.fossa.com/projects/git%2Bgithub.com%2Fghostzero%2Ftmi?ref=badge_shield" alt="FOSSA Status"><img src="https://app.fossa.com/api/projects/git%2Bgithub.com%2Fghostzero%2Ftmi.svg?type=shield"/></a>
 
 ## Introduction
 
@@ -77,3 +78,7 @@ $client->on(MessageEvent::class, function (MessageEvent $e) use ($client) {
 
 $client->connect();
 ```
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fghostzero%2Ftmi.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fghostzero%2Ftmi?ref=badge_large)
