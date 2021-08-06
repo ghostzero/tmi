@@ -53,6 +53,12 @@ class Channel
         return $this->getName();
     }
 
+    
+    public function formatName(): string
+    {
+        return str_replace('#','',$this->getName());
+    }
+    
     public static function sanitize(string $channel): string
     {
         if ($channel[0] !== '#') {
