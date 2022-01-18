@@ -2,6 +2,9 @@
 
 namespace GhostZero\Tmi;
 
+use React\EventLoop\Loop;
+use React\EventLoop\LoopInterface;
+
 class ClientOptions
 {
     private array $options;
@@ -81,5 +84,10 @@ class ClientOptions
     public function getReconnectDelay(): int
     {
         return $this->options['connection']['reconnect_delay'] ?? 3;
+    }
+
+    public function getLoop(): LoopInterface
+    {
+        return $this->options['loop'] ?? Loop::get();
     }
 }

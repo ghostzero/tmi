@@ -36,7 +36,7 @@ class Client
     public function __construct(ClientOptions $options)
     {
         $this->options = $options;
-        $this->loop = \React\EventLoop\Factory::create();
+        $this->loop = $options->getLoop();
         $this->ircMessageParser = new IrcMessageParser();
         $this->eventHandler = new EventHandler();
     }

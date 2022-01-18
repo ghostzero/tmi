@@ -26,6 +26,7 @@
     "ext-json": "*"
   },
   "require-dev": {
+    "amphp/react-adapter": "^2.1",
     "phpunit/phpunit": "^9.3.3"
   },
   "minimum-stability": "dev",
