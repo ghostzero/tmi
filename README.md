@@ -3,7 +3,7 @@
 <a href="https://packagist.org/packages/ghostzero/tmi"><img src="https://img.shields.io/packagist/dt/ghostzero/tmi" alt="Total Downloads"></a>
 <a href="https://packagist.org/packages/ghostzero/tmi"><img src="https://img.shields.io/packagist/v/ghostzero/tmi" alt="Latest Stable Version"></a>
 <a href="https://packagist.org/packages/ghostzero/tmi"><img src="https://img.shields.io/packagist/l/ghostzero/tmi" alt="License"></a>
-<a href="https://discord.gg/qsxVMNg"><img src="https://discordapp.com/api/guilds/552952675369484301/embed.png?style=shield" alt="Discord"></a>
+<a href="https://ghostzero.dev/discord"><img src="https://discordapp.com/api/guilds/590942233126240261/embed.png?style=shield" alt="Discord"></a>
 
 ## Introduction
 
