@@ -2,32 +2,23 @@
 
 namespace GhostZero\Tmi;
 
+use co;
 use GhostZero\Tmi\Events\EventHandler;
 use GhostZero\Tmi\Events\WithinCoroutine;
 use GhostZero\Tmi\Exceptions\ParseException;
 use GhostZero\Tmi\Messages\IrcMessage;
 use GhostZero\Tmi\Messages\IrcMessageParser;
-use React\Dns\Resolver\Factory;
-use React\EventLoop\LoopInterface;
-use React\Promise\Promise;
-use React\Socket\ConnectionInterface;
-use React\Socket\DnsConnector;
-use React\Socket\SecureConnector;
-use React\Socket\TcpConnector;
 use RuntimeException;
+use Swoole\Client as SwooleClient;
 use Swoole\Coroutine;
 use Swoole\Runtime;
-use function Swoole\Coroutine\run;
+use function Co\run;
 
 class Client
 {
     use Traits\Irc;
 
-    private ConnectionInterface $connection;
-
     protected bool $connected;
-
-    private LoopInterface $loop;
 
     protected ClientOptions $options;
 
@@ -37,67 +28,107 @@ class Client
 
     protected EventHandler $eventHandler;
 
+    private SwooleClient $connection;
+
     public function __construct(ClientOptions $options)
     {
+        Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
+
         $this->options = $options;
-        $this->loop = \React\EventLoop\Factory::create();
         $this->ircMessageParser = new IrcMessageParser();
         $this->eventHandler = new EventHandler();
     }
 
     public function connect(?callable $execute = null): void
     {
-        $tcpConnector = new TcpConnector($this->loop);
-        $dnsResolverFactory = new Factory();
-        $dns = $dnsResolverFactory->createCached($this->options->getNameserver(), $this->loop);
-        $dnsConnector = new DnsConnector($tcpConnector, $dns);
-        $connectorPromise = $this->getConnectorPromise($dnsConnector);
+        $this->connection = new SwooleClient(SWOOLE_SOCK_TCP);
 
-        $connectorPromise->then(function (ConnectionInterface $connection) use ($execute) {
-            $this->connection = $connection;
-            $this->connected = true;
-            $this->channels = [];
+        // Connect to the remote server, handle any errors as well...
+        if (!$this->connection->connect('irc.chat.twitch.tv', 6667, 10)) {
+            echo "Connection Failed. Error: {$this->connection->errCode}\n";
+        }
 
-        $this->connection->on('data', function ($data) {
-            foreach (explode("\n", $data) as $message) {
-                if (empty(trim($message))) {
-                    continue;
+        $this->connected = true;
+
+        // login & request all twitch Kappabilities
+        $identity = $this->options->getIdentity();
+        $this->write("PASS {$identity['password']}");
+        $this->write("NICK {$identity['username']}");
+        $this->write('CAP REQ :twitch.tv/membership twitch.tv/tags twitch.tv/commands');
+
+        if (!is_null($execute)) {
+            //
+            // $this->loop->addTimer($this->options->getExecutionTimeout(), fn() => $this->close());
+
+            $execute();
+        }
+
+
+        while (true) {
+            // Keep reading data in using this loop
+            $data = $this->connection->recv();
+
+            // Check if we have any data or not
+            if (strlen($data) > 0) {
+                print_r('connection receive data');
+                foreach (explode("\n", $data) as $message) {
+                    if (empty(trim($message))) {
+                        continue;
+                    }
+
+                    try {
+                        $this->handleIrcMessage($this->ircMessageParser->parseSingle($message));
+                    } catch (ParseException $exception) {
+                        $this->debug($exception->getMessage());
+                    }
                 }
+            } else {
+                // An empty string means the connection has been closed
+                if ($data === '') {
+                    // We must close the connection to use the client again
+                    $this->connection->close();
+                    $this->connected = false;
 
-                try {
-                    $this->handleIrcMessage($this->ircMessageParser->parseSingle($message));
-                } catch (ParseException $exception) {
-                    $this->debug($exception->getMessage());
+                    if (is_null($execute)) {
+                        $this->reconnect('Connection closed by Twitch.');
+                    }
+                    break;
+                } else {
+                    // False means there was an error we need to check
+                    if ($data === false) {
+                        // You should use $client->errCode to handle errors yourself
+
+                        // A timeout error will not close the connection.
+                        if ($this->connection->errCode !== SOCKET_ETIMEDOUT) {
+                            // Not a timeout, close the connection due to an error
+                            $this->connection->close();
+                            $this->connected = false;
+
+                            if (is_null($execute)) {
+                                $this->reconnect('Connection closed by Twitch.');
+                            }
+                            break;
+                        }
+                    } else {
+                        // Unknown error, close and break out of the loop
+                        $this->connection->close();
+                        $this->connected = false;
+
+                        if (is_null($execute)) {
+                            $this->reconnect('Connection closed by Twitch.');
+                        }
+                        break;
+                    }
                 }
             }
-        });
 
-            $this->connection->on('close', function () use ($execute) {
-                $this->connected = false;
+            // Wait 1 second before reading data again on our loop
+            Co::sleep(1);
+        }
 
-                if (is_null($execute)) {
-                    $this->reconnect('Connection closed by Twitch.');
-                }
-            });
-
-        $this->connection->on('end', function () {
-            $this->connection->close();
-        });
-
-            // login & request all twitch Kappabilities
-            $identity = $this->options->getIdentity();
-            $this->write("PASS {$identity['password']}");
-            $this->write("NICK {$identity['username']}");
-            $this->write('CAP REQ :twitch.tv/membership twitch.tv/tags twitch.tv/commands');
-
-            if (!is_null($execute)) {
-              $this->loop->addTimer($this->options->getExecutionTimeout(), fn () => $this->close());
-
-              $execute();
-            }
-        }, fn($error) => $this->reconnect($error));
-
-        $this->loop->run();
+        while (true) {
+            sleep(1);
+        }
     }
 
     public function close(): void
@@ -106,7 +137,6 @@ class Client
 
         if ($this->isConnected()) {
             $this->connection->close();
-            $this->loop->stop();
         }
     }
 
@@ -121,7 +151,7 @@ class Client
             $rawCommand .= "\n";
         }
 
-        $this->connection->write($rawCommand);
+        $this->connection->send($rawCommand);
     }
 
     public function isConnected(): bool
@@ -137,18 +167,11 @@ class Client
 
         foreach ($events as $event) {
             $event->client = $this; // attach client to event
-            if($event instanceof WithinCoroutine) {
-                Coroutine::create(function () use ($event) {
-                    $this->eventHandler->invoke($event);
-                });
-            }
-            $this->eventHandler->invoke($event);
+            print_r(get_class($event));
+            Coroutine::create(function () use ($event) {
+                $this->eventHandler->invoke($event);
+            });
         }
-    }
-
-    public function getLoop(): LoopInterface
-    {
-        return $this->loop;
     }
 
     public function getOptions(): ClientOptions
@@ -173,14 +196,13 @@ class Client
         return $this;
     }
 
-    private function getConnectorPromise(DnsConnector $dnsConnector): Promise
+    private function getConnectionPort(): int
     {
         if ($this->options->shouldConnectSecure()) {
-            return (new SecureConnector($dnsConnector, $this->loop))
-                ->connect(sprintf('%s:6697', $this->options->getServer()));
+            return 6697;
         }
 
-        return $dnsConnector->connect(sprintf('%s:6667', $this->options->getServer()));
+        return 6667;
     }
 
     private function reconnect($error): void
