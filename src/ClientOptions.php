@@ -9,6 +9,13 @@ class ClientOptions
     public function __construct(array $options)
     {
         $this->options = $options;
+
+        if (empty($this->options['identity']['username']) || empty($this->options['identity']['password'])) {
+            $this->options['identity'] = [
+                'username' => $this->options['identity']['username'] ?? ('justinfan' . random_int(1000, 80000)),
+                'password' => 'SCHMOOPIIE'
+            ];
+        }
     }
 
     public function isDebug(): bool
@@ -16,10 +23,14 @@ class ClientOptions
         return $this->options['options']['debug'] ?? false;
     }
 
+    public function getExecutionTimeout(): float
+    {
+        return (float)($this->options['options']['execution_timeout'] ?? 1.5);
+    }
+
     public function getIdentity(): array
     {
-        $default = ['username' => 'justinfan' . random_int(1000, 80000), 'password' => 'SCHMOOPIIE'];
-        return $this->options['identity'] ?? $default;
+        return $this->options['identity'];
     }
 
     public function getChannels(): array
@@ -29,7 +40,7 @@ class ClientOptions
 
     public function getNickname(): string
     {
-        return $this->options['identity']['username'] ?? 'justinfan1337';
+        return $this->options['identity']['username'];
     }
 
     public function getServer(): string
@@ -45,6 +56,11 @@ class ClientOptions
     public function shouldReconnect(): bool
     {
         return $this->options['connection']['reconnect'] ?? true;
+    }
+
+    public function setShouldReconnect(bool $reconnect): void
+    {
+        $this->options['connection']['reconnect'] = $reconnect;
     }
 
     public function shouldConnectSecure(): bool

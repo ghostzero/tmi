@@ -2,7 +2,6 @@
 
 namespace GhostZero\Tmi;
 
-use Closure;
 use GhostZero\Tmi\Events\EventHandler;
 use GhostZero\Tmi\Events\WithinCoroutine;
 use GhostZero\Tmi\Exceptions\ParseException;
@@ -46,7 +45,7 @@ class Client
         $this->eventHandler = new EventHandler();
     }
 
-    public function connect(): void
+    public function connect(?callable $execute = null): void
     {
         $tcpConnector = new TcpConnector($this->loop);
         $dnsResolverFactory = new Factory();
@@ -54,19 +53,10 @@ class Client
         $dnsConnector = new DnsConnector($tcpConnector, $dns);
         $connectorPromise = $this->getConnectorPromise($dnsConnector);
 
-        $connectorPromise->then([$this, 'handleConnection'], fn($error) => $this->reconnect($error));
-
-        Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
-        run(function() {
-            $this->loop->run();
-        });
-    }
-
-    private function handleConnection(ConnectionInterface $connection)
-    {
-        $this->connection = $connection;
-        $this->connected = true;
-        $this->channels = [];
+        $connectorPromise->then(function (ConnectionInterface $connection) use ($execute) {
+            $this->connection = $connection;
+            $this->connected = true;
+            $this->channels = [];
 
         $this->connection->on('data', function ($data) {
             foreach (explode("\n", $data) as $message) {
@@ -82,24 +72,38 @@ class Client
             }
         });
 
-        $this->connection->on('close', function () {
-            $this->connected = false;
-            $this->reconnect('Connection closed by Twitch.');
-        });
+            $this->connection->on('close', function () use ($execute) {
+                $this->connected = false;
+
+                if (is_null($execute)) {
+                    $this->reconnect('Connection closed by Twitch.');
+                }
+            });
 
         $this->connection->on('end', function () {
             $this->connection->close();
         });
 
-        // login & request all twitch Kappabilities
-        $identity = $this->options->getIdentity();
-        $this->write("PASS {$identity['password']}");
-        $this->write("NICK {$identity['username']}");
-        $this->write('CAP REQ :twitch.tv/membership twitch.tv/tags twitch.tv/commands');
+            // login & request all twitch Kappabilities
+            $identity = $this->options->getIdentity();
+            $this->write("PASS {$identity['password']}");
+            $this->write("NICK {$identity['username']}");
+            $this->write('CAP REQ :twitch.tv/membership twitch.tv/tags twitch.tv/commands');
+
+            if (!is_null($execute)) {
+              $this->loop->addTimer($this->options->getExecutionTimeout(), fn () => $this->close());
+
+              $execute();
+            }
+        }, fn($error) => $this->reconnect($error));
+
+        $this->loop->run();
     }
 
     public function close(): void
     {
+        $this->options->setShouldReconnect(false);
+
         if ($this->isConnected()) {
             $this->connection->close();
             $this->loop->stop();
@@ -132,13 +136,13 @@ class Client
         $events = $message->handle($this, $this->channels);
 
         foreach ($events as $event) {
-            if ($event instanceof WithinCoroutine) {
+            $event->client = $this; // attach client to event
+            if($event instanceof WithinCoroutine) {
                 Coroutine::create(function () use ($event) {
                     $this->eventHandler->invoke($event);
                 });
-            } else {
-                $this->eventHandler->invoke($event);
             }
+            $this->eventHandler->invoke($event);
         }
     }
 
@@ -152,12 +156,17 @@ class Client
         return $this->options;
     }
 
-    public function any(Closure $closure): self
+    public function getEventHandler(): EventHandler
+    {
+        return $this->eventHandler;
+    }
+
+    public function any(callable $closure): self
     {
         return $this->on('*', $closure);
     }
 
-    public function on(string $event, Closure $closure): self
+    public function on(string $event, callable $closure): self
     {
         $this->eventHandler->addHandler($event, $closure);
 

@@ -3,11 +3,11 @@
 <a href="https://packagist.org/packages/ghostzero/tmi"><img src="https://img.shields.io/packagist/dt/ghostzero/tmi" alt="Total Downloads"></a>
 <a href="https://packagist.org/packages/ghostzero/tmi"><img src="https://img.shields.io/packagist/v/ghostzero/tmi" alt="Latest Stable Version"></a>
 <a href="https://packagist.org/packages/ghostzero/tmi"><img src="https://img.shields.io/packagist/l/ghostzero/tmi" alt="License"></a>
-<a href="https://discord.gg/qsxVMNg"><img src="https://discordapp.com/api/guilds/552952675369484301/embed.png?style=shield" alt="Discord"></a>
+<a href="https://ghostzero.dev/discord"><img src="https://discordapp.com/api/guilds/590942233126240261/embed.png?style=shield" alt="Discord"></a>
 
 ## Introduction
 
-Inspired by [tmi.js](https://github.com/tmijs/tmi.js), [php-irc-client](https://github.com/jerodev/php-irc-client) this package is a full featured, high performance Twitch IRC client written in PHP 7.4.
+Inspired by [tmi.js](https://github.com/tmijs/tmi.js) and [php-irc-client](https://github.com/jerodev/php-irc-client) this package is a full featured, high performance Twitch IRC client written in PHP 7.4.
 
 Also have a look at [ghostzero/tmi-cluster](https://github.com/ghostzero/tmi-cluster). TMI Cluster is a Laravel package that makes the PHP TMI client scalable.
 
