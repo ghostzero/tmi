@@ -9,7 +9,7 @@ use GhostZero\Tmi\Exceptions\ParseException;
 use GhostZero\Tmi\Messages\IrcMessage;
 use GhostZero\Tmi\Messages\IrcMessageParser;
 use RuntimeException;
-use Swoole\Client as SwooleClient;
+use Swoole\Client as TcpClient;
 use Swoole\Coroutine;
 use Swoole\Runtime;
 use function Co\run;
@@ -28,7 +28,7 @@ class Client
 
     protected EventHandler $eventHandler;
 
-    private SwooleClient $connection;
+    private TcpClient $connection;
 
     public function __construct(ClientOptions $options)
     {
@@ -41,7 +41,20 @@ class Client
 
     public function connect(?callable $execute = null): void
     {
-        $this->connection = new SwooleClient(SWOOLE_SOCK_TCP);
+        do {
+            run(fn() => $this->establishConnection($execute));
+
+            if (!is_null($execute) && $this->options->shouldReconnect()) {
+                $seconds = $this->options->getReconnectDelay();
+                $this->debug("Initialize reconnect in {$seconds} seconds... Error: Connection closed by Twitch.");
+                sleep($seconds);
+            }
+        } while (is_null($execute));
+    }
+
+    private function establishConnection(?callable $execute = null)
+    {
+        $this->connection = new TcpClient(SWOOLE_SOCK_TCP);
 
         // Connect to the remote server, handle any errors as well...
         if (!$this->connection->connect('irc.chat.twitch.tv', 6667, 10)) {
@@ -57,12 +70,11 @@ class Client
         $this->write('CAP REQ :twitch.tv/membership twitch.tv/tags twitch.tv/commands');
 
         if (!is_null($execute)) {
-            //
+            // fixme, now we do not have any execution timeout
             // $this->loop->addTimer($this->options->getExecutionTimeout(), fn() => $this->close());
 
             $execute();
         }
-
 
         while (true) {
             // Keep reading data in using this loop
@@ -70,7 +82,6 @@ class Client
 
             // Check if we have any data or not
             if (strlen($data) > 0) {
-                print_r('connection receive data');
                 foreach (explode("\n", $data) as $message) {
                     if (empty(trim($message))) {
                         continue;
@@ -88,10 +99,6 @@ class Client
                     // We must close the connection to use the client again
                     $this->connection->close();
                     $this->connected = false;
-
-                    if (is_null($execute)) {
-                        $this->reconnect('Connection closed by Twitch.');
-                    }
                     break;
                 } else {
                     // False means there was an error we need to check
@@ -103,20 +110,12 @@ class Client
                             // Not a timeout, close the connection due to an error
                             $this->connection->close();
                             $this->connected = false;
-
-                            if (is_null($execute)) {
-                                $this->reconnect('Connection closed by Twitch.');
-                            }
                             break;
                         }
                     } else {
                         // Unknown error, close and break out of the loop
                         $this->connection->close();
                         $this->connected = false;
-
-                        if (is_null($execute)) {
-                            $this->reconnect('Connection closed by Twitch.');
-                        }
                         break;
                     }
                 }
@@ -124,10 +123,6 @@ class Client
 
             // Wait 1 second before reading data again on our loop
             Co::sleep(1);
-        }
-
-        while (true) {
-            sleep(1);
         }
     }
 
@@ -167,10 +162,13 @@ class Client
 
         foreach ($events as $event) {
             $event->client = $this; // attach client to event
-            print_r(get_class($event));
-            Coroutine::create(function () use ($event) {
+            if ($event instanceof WithinCoroutine) {
+                Coroutine::create(function () use ($event) {
+                    $this->eventHandler->invoke($event);
+                });
+            } else {
                 $this->eventHandler->invoke($event);
-            });
+            }
         }
     }
 
@@ -203,16 +201,6 @@ class Client
         }
 
         return 6667;
-    }
-
-    private function reconnect($error): void
-    {
-        if ($this->options->shouldReconnect()) {
-            $seconds = $this->options->getReconnectDelay();
-            $this->debug("Initialize reconnect in {$seconds} seconds... Error: " . $error);
-            sleep($seconds);
-            $this->connect();
-        }
     }
 
     private function debug(string $message): void
