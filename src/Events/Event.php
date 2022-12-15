@@ -4,10 +4,8 @@ namespace GhostZero\Tmi\Events;
 
 use GhostZero\Tmi\Client;
 use ReflectionClass;
-use ReflectionException;
-use Serializable;
 
-class Event implements Serializable
+class Event
 {
     /**
      * @var Client|null Client object. Can be null if serialized.
@@ -21,32 +19,28 @@ class Event implements Serializable
 
     /**
      * Override serializer, since we cannot serialize the client object.
-     *
-     * @inheritdoc
      */
-    public function serialize()
+    public function __serialize(): array
     {
         $data = [];
         $reflect = new ReflectionClass($this);
         $props = $reflect->getProperties();
+
         foreach ($props as $prop) {
             if ($prop->getName() === 'client') {
                 continue;
             }
             $data[$prop->getName()] = ['s' => $prop->isStatic(), 'v' => $prop->getValue($this)];
         }
-        return serialize($data);
+
+        return $data;
     }
 
-    /**
-     * @inheritdoc
-     * @throws ReflectionException
-     */
-    public function unserialize($data)
+    public function __unserialize(array $data): void
     {
-        $props = unserialize($data);
         $reflect = new ReflectionClass($this);
-        foreach ($props as $name => $prop) {
+
+        foreach ($data as $name => $prop) {
             if ($prop['s']) {
                 $reflect->getProperty($name)->setValue($prop['v']);
             } else {
