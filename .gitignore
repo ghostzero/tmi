@@ -2,4 +2,5 @@
 /.idea
 composer.lock
 .phpunit.result.cache
+.twitch_token.json
 tmi.php

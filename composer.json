@@ -22,6 +22,8 @@
   "require": {
     "php": "^7.4|^8.0",
     "react/socket": "^1.6",
+    "react/http": "^1.6",
+    "ratchet/pawl": "^0.4",
     "ext-mbstring": "*",
     "ext-json": "*"
   },
