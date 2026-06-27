@@ -47,6 +47,7 @@ class IrcMessageParser
                     break;
 
                 case 'PRIVMSG':
+                case 'WHISPER':
                     $msg = new PrivmsgMessage($message);
                     break;
 

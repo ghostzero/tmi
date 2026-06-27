@@ -21,6 +21,7 @@ class UserNoticeMessage extends IrcMessage
     public const TAG_SUB = 'sub';
     public const TAG_SUBGIFT = 'subgift';
     public const TAG_SUBMYSTERYGIFT = 'submysterygift';
+    public const TAG_VIEWERMILESTONE = 'viewermilestone';
 
     public Channel $channel;
 
@@ -68,6 +69,8 @@ class UserNoticeMessage extends IrcMessage
         $raidedChannel = $tags['msg-param-displayName'] ?? $tags['msg-param-login'] ?? '';
         $viewers = (int)($tags['msg-param-viewerCount'] ?? 0);
         $ritual = $tags['msg-param-ritual-name'] ?? '';
+        $category = $tags['msg-param-category'] ?? '';
+        $milestoneValue = (int)($tags['msg-param-value'] ?? 0);
         $message = $this->payload ?? '';
 
         switch ($msgId) {
@@ -93,6 +96,8 @@ class UserNoticeMessage extends IrcMessage
                 return new Twitch\SubGiftEvent($this->channel, $username, $streakMonths, $recipient, $plan, $tags);
             case self::TAG_SUBMYSTERYGIFT:
                 return new Twitch\SubMysteryGiftEvent($this->channel, $username, $giftSubCount, $plan, $tags);
+            case self::TAG_VIEWERMILESTONE:
+                return new Twitch\ViewerMilestoneEvent($this->channel, $username, $milestoneValue, $category, $tags);
             default:
                 return null;
         }
